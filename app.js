@@ -1,71 +1,9 @@
 // IPHM.NETWORK Enhanced Application Engine
 import { supabase, SUPABASE_URL } from './supabaseClient.js';
 
-// Initial Default Providers Seed (Zero sensitive upstream secrets in catalog)
-const DEFAULT_PROVIDERS = [
-  {
-    id: 1,
-    city: 'Amsterdam',
-    country: 'Netherland',
-    countryCode: 'nl',
-    type: 'VPS',
-    pps: '150K pps',
-    ppsNum: 150000,
-    nic: '10 GBPS',
-    spoofing: 'Working',
-    updatedAgo: '18 minutes ago',
-    priceUsd: 45,
-    priceLtc: '0.50',
-    isHidden: false
-  },
-  {
-    id: 2,
-    city: 'Frankfurt',
-    country: 'Germany',
-    countryCode: 'de',
-    type: 'Dedicated',
-    pps: '450K pps',
-    ppsNum: 450000,
-    nic: '10 GBPS',
-    spoofing: 'Working',
-    updatedAgo: '42 minutes ago',
-    priceUsd: 75,
-    priceLtc: '0.80',
-    isHidden: false
-  },
-  {
-    id: 3,
-    city: 'Zurich',
-    country: 'Switzerland',
-    countryCode: 'ch',
-    type: 'Dedicated',
-    pps: '800K pps',
-    ppsNum: 800000,
-    nic: '25 GBPS',
-    spoofing: 'Working',
-    updatedAgo: '5 minutes ago',
-    priceUsd: 110,
-    priceLtc: '1.20',
-    isHidden: false
-  },
-  {
-    id: 4,
-    city: 'Reykjavik',
-    country: 'Iceland',
-    countryCode: 'is',
-    type: 'VPS',
-    pps: '320K pps',
-    ppsNum: 320000,
-    nic: '10 GBPS',
-    spoofing: 'Working',
-    updatedAgo: '1 hour ago',
-    priceUsd: 60,
-    priceLtc: '0.65',
-    isHidden: false
-  }
-];
-
-// Safe Fallback Alias for Providers
+// No demo provider cards are shipped with the app.
+// The homepage is populated only from the Supabase providers table.
+const DEFAULT_PROVIDERS = [];
 const PROVIDERS = DEFAULT_PROVIDERS;
 
 // ====================================================================
@@ -235,25 +173,9 @@ function loadInitialUnlocked() {
 }
 
 function loadInitialProviders() {
-  const stored = localStorage.getItem('iphm_providers');
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        // Sanitize: ensure no secret names or URLs linger in storage
-        const sanitized = parsed.map(p => {
-          const clean = { ...p };
-          delete clean.revealedName;
-          delete clean.revealedUrl;
-          return clean;
-        });
-        localStorage.setItem('iphm_providers', JSON.stringify(sanitized));
-        return sanitized;
-      }
-    } catch (e) {}
-  }
-  localStorage.setItem('iphm_providers', JSON.stringify(DEFAULT_PROVIDERS));
-  return [...DEFAULT_PROVIDERS];
+  // Start from an empty catalog so cards are created by the database/admin flow.
+  localStorage.removeItem('iphm_providers');
+  return [];
 }
 
 // Global State
@@ -376,11 +298,15 @@ function renderProviders() {
   });
 
   if (filtered.length === 0) {
+    const emptyText = visible.length === 0
+      ? 'No provider cards yet. Add listings from the admin panel or database to populate the homepage.'
+      : 'No matching providers found. Try adjusting your filter or search keywords.';
+
     grid.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; background: var(--color-surface); border: 1px dashed var(--color-line-bright); border-radius: var(--radius-xl);">
-        <p style="font-size: 1.125rem; font-weight: 600; color: var(--color-ink);">No matching providers found</p>
-        <p style="font-size: 0.875rem; color: var(--color-muted); margin-top: 0.25rem;">Try adjusting your filter or search keywords.</p>
-        <button type="button" class="btn btn-ghost btn-sm" style="margin-top: 1rem;" id="resetFiltersBtn">Reset Filters</button>
+        <p style="font-size: 1.125rem; font-weight: 600; color: var(--color-ink);">${visible.length === 0 ? 'No provider cards yet' : 'No matching providers found'}</p>
+        <p style="font-size: 0.875rem; color: var(--color-muted); margin-top: 0.25rem;">${emptyText}</p>
+        ${visible.length > 0 ? '<button type="button" class="btn btn-ghost btn-sm" style="margin-top: 1rem;" id="resetFiltersBtn">Reset Filters</button>' : ''}
       </div>
     `;
 
