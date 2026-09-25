@@ -2,7 +2,7 @@
 import { supabase, SUPABASE_URL } from './supabaseClient.js';
 
 // No demo provider cards are shipped with the app.
-// The homepage is populated only from the Supabase providers table.
+// Every card must be created by the admin in Supabase and published explicitly.
 const DEFAULT_PROVIDERS = [];
 const PROVIDERS = DEFAULT_PROVIDERS;
 

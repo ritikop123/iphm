@@ -239,18 +239,11 @@ update public.providers
 set revealed_name = 'Verified Host Gateway',
     revealed_url = 'https://iphm.network';
 
--- Safe seed if table is empty
-insert into public.providers (id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, revealed_name, revealed_url, is_hidden)
-values
-  (1, 'Amsterdam', 'Netherland', 'nl', 'VPS', '150K pps', 150000, '10 GBPS', 'Working', '18 minutes ago', 45.00, '0.50', 'Verified Host Gateway', 'https://iphm.network', false),
-  (2, 'Frankfurt', 'Germany', 'de', 'Dedicated', '450K pps', 450000, '10 GBPS', 'Working', '42 minutes ago', 75.00, '0.80', 'Verified Host Gateway', 'https://iphm.network', false),
-  (3, 'Zurich', 'Switzerland', 'ch', 'Dedicated', '800K pps', 800000, '25 GBPS', 'Working', '5 minutes ago', 110.00, '1.20', 'Verified Host Gateway', 'https://iphm.network', false),
-  (4, 'Reykjavik', 'Iceland', 'is', 'VPS', '320K pps', 320000, '10 GBPS', 'Working', '1 hour ago', 60.00, '0.65', 'Verified Host Gateway', 'https://iphm.network', false)
-on conflict (id) do update set
-  revealed_name = 'Verified Host Gateway',
-  revealed_url = 'https://iphm.network';
+-- IMPORTANT: Do not seed demo provider cards here.
+-- The admin must create every listing manually in Supabase and publish it with is_hidden = false.
+-- The homepage should remain empty until a real provider card is added.
 
--- Ensure sequence matches highest existing id
+-- Ensure sequence matches highest existing id without inserting demo rows
 select setval(pg_get_serial_sequence('public.providers', 'id'), coalesce(max(id), 1)) from public.providers;
 
 -- --------------------------------------------------------------------
