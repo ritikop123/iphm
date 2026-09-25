@@ -107,24 +107,6 @@ body {
   animation: pulseAura 8s ease-in-out infinite alternate;
 }
 
-/* Vanta.js 3D Interactive Net Background */
-#vanta-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-#vanta-bg canvas,
-#vanta-bg .vanta-canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
 ::selection {
   color: #04140a;
   background: var(--color-accent);
