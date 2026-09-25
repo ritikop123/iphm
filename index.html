@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#06080c" />
+  <title>IPHM.NETWORK — Hosts that let you spoof</title>
+  <link rel="icon" type="image/png" href="iphm.png" />
+  <link rel="apple-touch-icon" href="iphm.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="min-h-screen">
+  <!-- Vanta.js 3D Interactive Net Background -->
+  <div id="vanta-bg" aria-hidden="true"></div>
+
+  <div class="site-wrapper">
+    <!-- Header -->
+    <!-- Header -->
+    <header class="site-header" id="siteHeader">
+      <div class="container header-inner">
+        <a class="logo-link" href="#" id="logoLink" title="IPHM.NETWORK Home">
+          <img src="iphm.png" alt="IPHM NETWORK" class="site-brand-logo" />
+        </a>
+
+        <nav class="site-nav" id="desktopNav">
+          <a href="#providers" class="nav-link-item active" data-nav="providers">
+            <span>Providers</span>
+            <span class="nav-badge-count" id="navProviderCount">4</span>
+          </a>
+          <a href="#how-it-works" class="nav-link-item" data-nav="how-it-works">
+            <span>How it works</span>
+          </a>
+          <a href="#faq" class="nav-link-item" data-nav="faq">
+            <span>FAQ</span>
+          </a>
+        </nav>
+
+        <div class="header-actions">
+          <!-- Admin Dashboard Button (Only visible for admin role) -->
+          <a href="admin.html" class="btn btn-nav-admin" id="openAdminBtn" title="Admin Dashboard" style="display: none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>Admin</span>
+            <span class="nav-admin-badge" id="adminPendingBadge" style="display: none;">0</span>
+          </a>
+
+          <!-- My Orders / Cart Tracker Button -->
+          <a href="orders.html" class="btn btn-nav-orders" id="openOrdersBtn" title="My Orders & Cart">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+              <path d="M3 6h18"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            <span>Orders</span>
+            <span class="nav-orders-badge" id="navOrdersBadge" style="display: none;">0</span>
+          </a>
+
+          <div id="headerAuthContainer">
+            <button type="button" class="btn btn-nav-auth" id="openAuthBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                <polyline points="10 17 15 12 10 7"/>
+                <line x1="15" x2="3" y1="12" y2="12"/>
+              </svg>
+              <span>Sign in</span>
+            </button>
+          </div>
+
+          <!-- Mobile Hamburger Menu Button -->
+          <button type="button" class="mobile-toggle-btn" id="mobileToggleBtn" aria-label="Toggle navigation menu" aria-expanded="false">
+            <span class="hamburger-line line-1"></span>
+            <span class="hamburger-line line-2"></span>
+            <span class="hamburger-line line-3"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation Drawer -->
+      <div class="mobile-nav-drawer" id="mobileNavDrawer" aria-hidden="true">
+        <div class="mobile-nav-inner">
+          <a href="#providers" class="mobile-nav-link" data-close-drawer>
+            <div class="mobile-link-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="20" height="8" x="2" y="2" rx="2" ry="2"/>
+                <rect width="20" height="8" x="2" y="14" rx="2" ry="2"/>
+                <line x1="6" x2="6.01" y1="6" y2="6"/>
+                <line x1="6" x2="6.01" y1="18" y2="18"/>
+              </svg>
+            </div>
+            <span class="mobile-link-title">Verified Providers</span>
+            <span class="nav-badge-count ml-auto" id="mobileProviderCount">4 live</span>
+          </a>
+          <a href="orders.html" class="mobile-nav-link" data-close-drawer>
+            <div class="mobile-link-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                <path d="M3 6h18"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </div>
+            <span class="mobile-link-title">My Orders & Cart</span>
+          </a>
+          <a href="profile.html" class="mobile-nav-link" data-close-drawer>
+            <div class="mobile-link-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+            </div>
+            <span class="mobile-link-title">My Profile & Security</span>
+          </a>
+          <a href="#how-it-works" class="mobile-nav-link" data-close-drawer>
+            <div class="mobile-link-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <span class="mobile-link-title">How it works</span>
+          </a>
+          <a href="#faq" class="mobile-nav-link" data-close-drawer>
+            <div class="mobile-link-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" x2="12.01" y1="17" y2="17"/>
+              </svg>
+            </div>
+            <span class="mobile-link-title">FAQ & Guide</span>
+          </a>
+          <div class="mobile-nav-divider"></div>
+          <!-- Mobile Auth Button (Sign In / User menu — injected here by renderHeaderAuth for mobile) -->
+          <div id="mobileAuthContainer" style="padding: 0.25rem 0;">
+            <button type="button" class="mobile-nav-link" id="mobileOpenAuthBtn" style="width: 100%; border: none; background: linear-gradient(135deg, rgba(74,222,128,0.12) 0%, rgba(34,197,94,0.04) 100%); border: 1px solid rgba(74,222,128,0.3); border-radius: var(--radius-lg); margin: 0; text-align: left; display: flex;">
+              <div class="mobile-link-icon text-accent">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                  <polyline points="10 17 15 12 10 7"/>
+                  <line x1="15" x2="3" y1="12" y2="12"/>
+                </svg>
+              </div>
+              <span class="mobile-link-title text-accent" style="font-weight: 700;">Sign in to your account</span>
+            </button>
+          </div>
+          <div class="mobile-nav-divider"></div>
+          <a href="orders.html" class="mobile-nav-link" id="mobileOrdersBtn" data-close-drawer style="width: 100%; border: none; background: transparent; text-align: left; display: flex;">
+            <div class="mobile-link-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                <path d="M3 6h18"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </div>
+            <span class="mobile-link-title">My Orders / Cart</span>
+            <span class="nav-orders-badge ml-auto" id="mobileOrdersBadge" style="display: none;">0</span>
+          </a>
+          <a href="admin.html" class="mobile-nav-link" id="mobileAdminBtn" data-close-drawer style="display: none; width: 100%; border: none; background: transparent; text-align: left;">
+            <div class="mobile-link-icon text-accent">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <span class="mobile-link-title">Admin Dashboard</span>
+            <span class="nav-admin-badge ml-auto" id="mobileAdminPendingBadge" style="display: none;">0</span>
+          </a>
+          <div class="mobile-nav-divider"></div>
+          <a href="https://t.me/iphm_network" target="_blank" rel="noopener noreferrer" class="mobile-nav-link">
+            <div class="mobile-link-icon support-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m22 2-7 20-4-9-9-4Z"/>
+                <path d="M22 2 11 13"/>
+              </svg>
+            </div>
+            <div class="mobile-link-group">
+              <span class="mobile-link-title">Telegram Support</span>
+              <span class="mobile-link-sub">@iphm_network</span>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-faint ml-auto">
+              <path d="M7 17l9.2-9.2M17 17V7H7"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <!-- Hero Section -->
+      <section class="container hero-section">
+        <!-- Hero Brand Logo Emblem -->
+        <div class="hero-brand-wrap">
+          <img src="iphm.png" alt="IPHM NETWORK" class="hero-brand-logo" />
+        </div>
+
+        <h1 class="hero-title">
+          Hosts that let you spoof.<br />
+          <span class="glow-accent">That's the whole list.</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          VPS and dedicated providers that let spoofed traffic through. Check the specs before you pay — you only get the provider's name once your payment lands.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#providers" class="btn btn-primary">
+            Browse providers
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </a>
+          <a href="#how-it-works" class="btn btn-ghost">
+            How it works
+          </a>
+        </div>
+
+        <!-- Stats Grid with Icons -->
+        <dl class="hero-stats">
+          <div class="panel stat-card">
+            <dd class="stat-value" id="statLiveProviders">4</dd>
+            <dt class="stat-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-accent">
+                <rect width="20" height="8" x="2" y="2" rx="2" ry="2"/>
+                <rect width="20" height="8" x="2" y="14" rx="2" ry="2"/>
+                <line x1="6" x2="6.01" y1="6" y2="6"/>
+                <line x1="6" x2="6.01" y1="18" y2="18"/>
+              </svg>
+              Live providers
+            </dt>
+          </div>
+          <div class="panel stat-card">
+            <dd class="stat-value" id="statCountries">4</dd>
+            <dt class="stat-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-accent">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+                <path d="M2 12h20"/>
+              </svg>
+              Countries
+            </dt>
+          </div>
+          <div class="panel stat-card">
+            <dd class="stat-value" id="statUnlocked">0</dd>
+            <dt class="stat-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-accent">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              Providers unlocked
+            </dt>
+          </div>
+        </dl>
+      </section>
+
+      <!-- Providers Section -->
+      <section id="providers" class="container providers-section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Available providers</h2>
+            <p class="section-desc">You don't see the name until you've paid. What you see is what you get.</p>
+          </div>
+          <div class="section-head-badges">
+            <div class="live-rates-bar" id="liveRatesBar" title="Live market crypto rates auto-updating">
+              <span class="live-dot" style="width: 6px; height: 6px;"></span>
+              <span class="ticker-label">Live:</span>
+              <span class="rate-badge" id="rateBadgeLtc">LTC: <strong>$73.95</strong></span>
+              <span class="rate-badge" id="rateBadgeBtc">BTC: <strong>$84,235</strong></span>
+              <span class="rate-badge" id="rateBadgeEth">ETH: <strong>$2,676</strong></span>
+              <span class="rate-badge" id="rateBadgeSol">SOL: <strong>$116.90</strong></span>
+            </div>
+            <span class="chip chip-accent">
+              <span class="live-dot"></span>
+              <span id="liveListingsText">4 live listings</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Filter & Search Controls Bar -->
+        <div class="filter-bar">
+          <div class="filter-pills" id="filterPills">
+            <button type="button" class="filter-btn active" data-filter="all">All Listings</button>
+            <button type="button" class="filter-btn" data-filter="VPS">VPS</button>
+            <button type="button" class="filter-btn" data-filter="Dedicated">Dedicated</button>
+          </div>
+
+          <div class="search-input-box">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="text" class="search-field" id="searchInput" placeholder="Search location or type…" />
+          </div>
+        </div>
+
+        <!-- Dynamic Providers Cards Grid -->
+        <div class="providers-grid" id="providersGrid">
+          <!-- Cards will be populated dynamically from app.js -->
+        </div>
+      </section>
+
+      <!-- How It Works Section -->
+      <section id="how-it-works" class="how-section">
+        <div class="container">
+          <h2 class="section-title">How it works</h2>
+          <p class="section-desc">Three steps, start to finish. Usually takes under ten minutes.</p>
+
+          <ol class="steps-grid">
+            <li class="step-card">
+              <div class="step-card-header">
+                <span class="step-number">01</span>
+                <span class="step-icon-badge">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.3-4.3"/>
+                  </svg>
+                </span>
+              </div>
+              <h3 class="step-title">Pick a provider</h3>
+              <p class="step-desc">
+                Every listing shows the country, machine type, top PPS, NIC speed, and whether spoofing still works. The name and site stay hidden until you pay.
+              </p>
+            </li>
+
+            <li class="step-card">
+              <div class="step-card-header">
+                <span class="step-number">02</span>
+                <span class="step-icon-badge">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                  </svg>
+                </span>
+              </div>
+              <h3 class="step-title">Pay in crypto (USD pricing)</h3>
+              <p class="step-desc">
+                All listings are priced in US Dollars ($45, $75, $110, $60). Choose Litecoin (LTC), Bitcoin, Ethereum, Solana, USDT, or DOGE. Send the exact amount, paste your TXID, and we track the chain.
+              </p>
+            </li>
+
+            <li class="step-card">
+              <div class="step-card-header">
+                <span class="step-number">03</span>
+                <span class="step-icon-badge">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </span>
+              </div>
+              <h3 class="step-title">Get the name and link</h3>
+              <p class="step-desc">
+                Once your payment has 2 confirmations, it unlocks on its own. The provider's name and website show up in your dashboard for good.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- FAQ Section -->
+      <section id="faq" class="container faq-section">
+        <h2 class="section-title">Common questions</h2>
+        <div class="faq-list">
+          <!-- Item 1 (Expanded by default) -->
+          <div class="faq-item open">
+            <button type="button" class="faq-trigger" aria-expanded="true">
+              <span>Why can't I see the provider's name?</span>
+              <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </button>
+            <div class="faq-content">
+              That's the point. These providers let through traffic most hosts block, so we keep their names off the public page or the list gets killed. You still see everything that matters first — country, machine type, top PPS, NIC speed, and the last spoofing test.
+            </div>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="faq-item">
+            <button type="button" class="faq-trigger" aria-expanded="false">
+              <span>How do I pay?</span>
+              <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </button>
+            <div class="faq-content">
+              All listings are priced in USD. Hit Buy, select your coin — Litecoin (LTC), Bitcoin (BTC), Ethereum (ETH), Solana (SOL), USDT (TRC-20 / BEP-20), or Dogecoin (DOGE). Send the exact converted crypto amount to the address shown, then paste your TXID. We check it on the blockchain and unlock your order at 2 confirmations.
+            </div>
+          </div>
+
+          <!-- Item 3 -->
+          <div class="faq-item">
+            <button type="button" class="faq-trigger" aria-expanded="false">
+              <span>What cryptocurrencies do you accept?</span>
+              <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </button>
+            <div class="faq-content">
+              We accept Litecoin (LTC), Bitcoin (BTC), Ethereum (ETH), Solana (SOL), USDT (TRON TRC-20 and Binance BEP-20), and Dogecoin (DOGE). All plans are priced in US Dollars with real-time conversion. You can also swap any other token instantly at <a href="https://ff.io" target="_blank" rel="noopener noreferrer" class="text-accent" style="text-decoration: underline;">https://ff.io</a>.
+            </div>
+          </div>
+
+          <!-- Item 4 -->
+          <div class="faq-item">
+            <button type="button" class="faq-trigger" aria-expanded="false">
+              <span>How long does a payment take?</span>
+              <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </button>
+            <div class="faq-content">
+              Litecoin blocks land about every 2.5 minutes, so 2 confirmations is usually around 5 minutes after your wallet sends it. The page updates on its own, no need to refresh.
+            </div>
+          </div>
+
+          <!-- Item 5 -->
+          <div class="faq-item">
+            <button type="button" class="faq-trigger" aria-expanded="false">
+              <span>What does 'Spoofing' mean on a listing?</span>
+              <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </button>
+            <div class="faq-content">
+              It's whether spoofed packets actually went through the last time we tested that provider's network. We re-test and update every listing, so it's current.
+            </div>
+          </div>
+
+          <!-- Item 6 -->
+          <div class="faq-item">
+            <button type="button" class="faq-trigger" aria-expanded="false">
+              <span>What if my payment gets rejected?</span>
+              <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </button>
+            <div class="faq-content">
+              That only happens if the TXID doesn't pay our address, or you sent less than the total. If you think it's wrong, keep your TXID and message our support directly on Telegram at <a href="https://t.me/iphm_network" target="_blank" rel="noopener noreferrer" class="text-accent" style="text-decoration: underline; font-weight: 600;">@iphm_network</a> — we'll verify it manually and activate your host instantly.
+            </div>
+          </div>
+        </div>
+
+        <!-- Dedicated Support Callout Banner -->
+        <div class="panel" style="margin-top: 2.5rem; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.25rem; border-color: rgba(74, 222, 128, 0.35); background: linear-gradient(135deg, rgba(12, 17, 25, 0.9) 0%, rgba(18, 25, 37, 0.95) 100%);">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 2.75rem; height: 2.75rem; border-radius: var(--radius-full); background: rgba(74, 222, 128, 0.15); border: 1px solid rgba(74, 222, 128, 0.4); display: flex; align-items: center; justify-content: center; color: var(--color-accent); flex-shrink: 0;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="m20.665 3.717-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l-.313 4.693c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.434Z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--color-ink);">Need Help or Custom Specs?</h3>
+              <p style="font-size: 0.8125rem; color: var(--color-muted); margin-top: 0.2rem;">Have questions about payments, other coins, or custom 25Gbps+ dedicated links? Contact support 24/7.</p>
+            </div>
+          </div>
+          <a href="https://t.me/iphm_network" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path d="m20.665 3.717-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l-.313 4.693c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.434Z"/>
+            </svg>
+            Contact @iphm_network
+          </a>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <!-- AUTH MODAL -->
+  <div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" aria-describedby="authModalSubtitle">
+    <div class="panel auth-modal-card" id="authModalCard">
+      <!-- Back button for Forgot Password / Reset view -->
+      <button type="button" class="auth-back-btn" id="authBackBtn" style="display: none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Back to Sign in</span>
+      </button>
+
+      <div class="auth-header-wrap">
+        <div class="auth-brand-badge" id="authBadgeIcon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div class="auth-header-info">
+          <h2 class="modal-title" id="authModalTitle">Sign in</h2>
+          <p class="modal-desc" id="authModalSubtitle">Your orders and unlocked providers live here.</p>
+        </div>
+        <button type="button" class="modal-close" id="closeAuthBtn" aria-label="Close modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m6 6 12 12M18 6 6 18"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Segmented Mode Tabs (Sign In vs Create Account) -->
+      <div class="auth-tabs" id="authTabsRow" role="tablist">
+        <button type="button" class="auth-tab-btn active" id="tabLoginBtn" role="tab" aria-selected="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          <span>Sign In</span>
+        </button>
+        <button type="button" class="auth-tab-btn" id="tabRegisterBtn" role="tab" aria-selected="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+          <span>Create Account</span>
+        </button>
+      </div>
+
+      <!-- Notification / Error Banner -->
+      <div id="authErrorBanner" class="auth-banner banner-error" style="display: none;" role="alert">
+        <span class="auth-banner-icon" id="authBannerIcon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </span>
+        <span class="auth-banner-text" id="authBannerText"></span>
+      </div>
+
+      <!-- Success View -->
+      <div id="authSuccessView" style="display: none; text-align: center; padding: 0.5rem 0;">
+        <div class="auth-success-circle">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <p style="font-size: 1.25rem; font-weight: 800; color: #fff;" id="authSuccessTitle">You're in.</p>
+        <p style="font-size: 0.875rem; color: var(--color-muted); margin-top: 0.35rem; line-height: 1.5;" id="authSuccessMsg">Signed in successfully. Pick up where you left off.</p>
+        <button type="button" class="btn btn-primary auth-submit-btn" style="width: 100%; margin-top: 1.5rem;" id="authSuccessDismissBtn">Continue</button>
+      </div>
+
+      <!-- Main Interactive Form -->
+      <form id="authForm" novalidate>
+        <!-- Email field -->
+        <div class="auth-field-group" id="authEmailGroup">
+          <label class="auth-label" for="authEmail">Email Address</label>
+          <div class="auth-input-wrapper">
+            <span class="auth-input-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+            </span>
+            <input id="authEmail" type="email" required class="auth-field" placeholder="name@proton.me" autocomplete="email" />
+          </div>
+        </div>
+
+        <!-- Password field -->
+        <div class="auth-field-group" id="authPasswordGroup">
+          <div class="auth-label-row">
+            <label class="auth-label" for="authPassword" id="authPasswordLabel">Password</label>
+            <button type="button" class="auth-inline-action" id="forgotPasswordBtn">Forgot password?</button>
+          </div>
+          <div class="auth-input-wrapper">
+            <span class="auth-input-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </span>
+            <input id="authPassword" type="password" required minlength="6" class="auth-field" placeholder="••••••••" autocomplete="current-password" />
+            <button type="button" class="auth-toggle-pwd" id="togglePasswordVisibilityBtn" aria-label="Toggle password visibility">
+              <svg class="icon-eye-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>
+              </svg>
+              <svg class="icon-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <!-- Real-time strength meter in register & reset modes -->
+          <div id="passwordStrengthBox" class="auth-strength-box" style="display: none;">
+            <div class="auth-strength-meter">
+              <span class="strength-bar" id="strBar1"></span>
+              <span class="strength-bar" id="strBar2"></span>
+              <span class="strength-bar" id="strBar3"></span>
+              <span class="strength-bar" id="strBar4"></span>
+            </div>
+            <span class="strength-text" id="strengthText">Min. 6 characters</span>
+          </div>
+        </div>
+
+        <!-- Confirm Password field (for Register and Password Reset) -->
+        <div class="auth-field-group" id="confirmPasswordGroup" style="display: none;">
+          <div class="auth-label-row">
+            <label class="auth-label" for="authConfirmPassword">Confirm Password</label>
+            <span class="auth-match-indicator" id="authMatchIndicator" style="display: none;"></span>
+          </div>
+          <div class="auth-input-wrapper">
+            <span class="auth-input-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </span>
+            <input id="authConfirmPassword" type="password" minlength="6" class="auth-field" placeholder="••••••••" autocomplete="new-password" />
+            <button type="button" class="auth-toggle-pwd" id="toggleConfirmPasswordVisibilityBtn" aria-label="Toggle confirm password visibility">
+              <svg class="icon-eye-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>
+              </svg>
+              <svg class="icon-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="auth-submit-btn" id="authSubmitBtn">
+          <span class="auth-spinner" id="authSubmitSpinner" style="display: none;"></span>
+          <span id="authSubmitBtnText">Sign in</span>
+        </button>
+
+        <div class="auth-footer-action" id="authFooterAction">
+          <span id="authSwitchPrompt">No account yet?</span>
+          <button type="button" class="auth-link-btn" id="toggleAuthModeBtn">Make one</button>
+        </div>
+
+        <div class="auth-security-notice">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span>256-Bit TLS • Zero Logs • Private Cloud Auth</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CHECKOUT MODAL -->
+  <div class="modal-overlay" id="checkoutModal">
+    <div class="panel modal-card modal-lg" id="checkoutModalCard">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Checkout</h2>
+          <p class="modal-desc" id="checkoutSubtitle">Amsterdam, NL — VPS</p>
+        </div>
+        <button type="button" class="modal-close" id="closeCheckoutBtn" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Stepper -->
+      <ol class="stepper" id="checkoutStepper">
+        <li class="step-item">
+          <span class="step-bar active" id="stepBar1"></span>
+          <span class="step-text active" id="stepText1">Pay Crypto</span>
+        </li>
+        <li class="step-item">
+          <span class="step-bar" id="stepBar2"></span>
+          <span class="step-text" id="stepText2">Confirm</span>
+        </li>
+        <li class="step-item">
+          <span class="step-bar" id="stepBar3"></span>
+          <span class="step-text" id="stepText3">Unlocked</span>
+        </li>
+      </ol>
+
+      <!-- Step 1: Send Payment View -->
+      <div id="checkoutStep1" style="margin-top: 1.5rem;">
+        <div style="background-color: var(--color-base); border: 1px solid var(--color-line-bright); border-radius: var(--radius-lg); padding: 1.25rem;">
+          
+          <!-- Amount & Pricing Section -->
+          <div style="display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid var(--color-line-bright);">
+            <div>
+              <p class="label" style="margin-bottom: 0.15rem;">Exact Price (USD)</p>
+              <div style="display: flex; align-items: baseline; gap: 0.35rem;">
+                <span class="font-mono text-ink" style="font-size: 1.5rem; font-weight: 800;" id="checkoutUsdPrice">$45.00</span>
+                <span class="text-faint font-mono" style="font-size: 0.85rem; font-weight: 600;">USD</span>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <p class="label" style="margin-bottom: 0.15rem;">Payment Network</p>
+              <span class="chip chip-accent" style="font-size: 10px;" id="checkoutNetworkBadge">Litecoin</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-top: 0.75rem;">
+            <div>
+              <p class="label" style="margin-bottom: 0.15rem;">Send exactly (Crypto)</p>
+              <span class="font-mono text-accent" style="font-size: 1.45rem; font-weight: 700;" id="checkoutAmountText">0.50 LTC</span>
+              <span class="text-muted font-mono" style="font-size: 0.78rem; margin-top: 0.2rem; display: block;" id="checkoutRateText">Exact: $45.00 USD (1 LTC ≈ $90.00 USD)</span>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="copyAmountBtn" style="margin-top: 0.25rem;">Copy amount</button>
+          </div>
+
+          <!-- Coin Selection Tabs (7 Options: LTC + BTC, ETH, SOL, USDT TRC20, USDT BEP20, DOGE) -->
+          <div class="coin-selector-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="label" style="margin-bottom: 0;">Select Payment Coin</span>
+              <span class="text-faint" style="font-size: 11px;">Instant Detection</span>
+            </div>
+            <div class="coin-tabs" id="coinSelectorTabs">
+              <button type="button" class="coin-tab-btn active" data-coin="LTC">
+                <span class="coin-symbol-icon" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">Ł</span>
+                LTC
+              </button>
+              <button type="button" class="coin-tab-btn" data-coin="BTC">
+                <span class="coin-symbol-icon" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24;">₿</span>
+                BTC
+              </button>
+              <button type="button" class="coin-tab-btn" data-coin="ETH">
+                <span class="coin-symbol-icon" style="background: rgba(96, 165, 250, 0.2); color: #60a5fa;">Ξ</span>
+                ETH
+              </button>
+              <button type="button" class="coin-tab-btn" data-coin="SOL">
+                <span class="coin-symbol-icon" style="background: rgba(168, 85, 247, 0.2); color: #c084fc;">S</span>
+                SOL
+              </button>
+              <button type="button" class="coin-tab-btn" data-coin="USDT_TRC20">
+                <span class="coin-symbol-icon" style="background: rgba(34, 197, 94, 0.2); color: #22c55e;">₮</span>
+                USDT (TRC20)
+              </button>
+              <button type="button" class="coin-tab-btn" data-coin="USDT_BEP20">
+                <span class="coin-symbol-icon" style="background: rgba(234, 179, 8, 0.2); color: #eab308;">₮</span>
+                USDT (BEP20)
+              </button>
+              <button type="button" class="coin-tab-btn" data-coin="DOGE">
+                <span class="coin-symbol-icon" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Ð</span>
+                DOGE
+              </button>
+            </div>
+          </div>
+
+          <!-- Deposit Address Section with Dynamic QR Code -->
+          <p class="label" style="margin-top: 1.25rem;" id="checkoutAddressLabel">To this Litecoin [Litecoin network] address</p>
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <div id="cryptoQrContainer" style="background: #fff; padding: 6px; border-radius: 8px; width: 68px; height: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <img id="checkoutQrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=LeMmBBeHHkzZvsq3X4hCp4Hd2cEBtmmPiv" alt="QR Code" width="56" height="56" style="display: block;" />
+            </div>
+
+            <div style="flex: 1; min-width: 0;">
+              <p class="font-mono text-ink" style="font-size: 0.8125rem; word-break: break-all; line-height: 1.4;" id="checkoutAddressText">LeMmBBeHHkzZvsq3X4hCp4Hd2cEBtmmPiv</p>
+              <button type="button" class="btn btn-ghost btn-sm" id="copyAddressBtn" style="margin-top: 0.5rem;">Copy address</button>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.25rem; padding-top: 0.75rem; border-top: 1px solid var(--color-line); display: flex; justify-content: space-between; align-items: center;">
+            <p class="text-faint font-mono" style="font-size: 0.75rem;" id="checkoutOrderRef">Order ORD-849201</p>
+            <span class="text-faint" style="font-size: 11px;">2 confirmations needed</span>
+          </div>
+        </div>
+
+        <form id="txidForm" style="margin-top: 1.25rem;">
+          <label class="label" for="txidInput" id="txidInputLabel">Paste your transaction ID after you send</label>
+          <input id="txidInput" type="text" class="field font-mono" style="font-size: 0.75rem;" placeholder="64-character TXID from your wallet" spellcheck="false" autocomplete="off" required />
+          <div id="txidErrorBanner" class="error-banner" style="display: none;"></div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="submitTxidBtn">
+            I sent it — check my payment
+          </button>
+        </form>
+
+        <!-- Dedicated Support Note in Checkout -->
+        <p style="text-align: center; margin-top: 1rem; font-size: 0.78rem; color: var(--color-muted);">
+          Need help with payment or confirmations? Message <a href="https://t.me/iphm_network" target="_blank" rel="noopener noreferrer" class="text-accent" style="text-decoration: underline; font-weight: 600;">@iphm_network on Telegram</a>
+        </p>
+      </div>
+
+      <!-- Step 2: Order Submitted & Pending Admin Approval Screen -->
+      <div id="checkoutStep2" style="display: none; margin-top: 1.5rem;">
+        <div style="background-color: var(--color-base); border: 1px solid var(--color-line-bright); border-radius: var(--radius-lg); padding: 1.25rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
+            <div>
+              <p style="font-size: 0.9375rem; font-weight: 700; color: var(--color-ink);" id="submittedHostNameTitle">Verified Network Gateway</p>
+              <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.2rem;" id="confirmingNotice">Listening for incoming transaction...</p>
+            </div>
+            <span class="chip text-warn" id="confirmingBadge" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3);">
+              <span class="live-dot" style="background-color: var(--color-warn);"></span>
+              <span id="confirmingStatusText">Pending Admin Review</span>
+            </span>
+          </div>
+
+          <div style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--color-line); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; font-size: 0.75rem;">
+            <div>
+              <span class="text-faint">Order Reference:</span>
+              <p class="font-mono text-ink font-semibold" id="submittedOrderRef">ORD-849201</p>
+            </div>
+            <div>
+              <span class="text-faint">Amount Paid:</span>
+              <p class="font-mono text-accent font-semibold" id="submittedAmount">45.00 USD</p>
+            </div>
+            <div style="grid-column: span 2;">
+              <span class="text-faint">Recorded TXID:</span>
+              <p class="font-mono text-muted" id="submittedTxidDisplay" style="word-break: break-all; font-size: 0.72rem; line-height: 1.4;">--</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.25rem; padding: 0.85rem 1rem; border-radius: var(--radius-md); background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); display: flex; gap: 0.65rem; align-items: flex-start;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-accent" style="flex-shrink: 0; margin-top: 0.1rem;">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <p class="text-faint" style="font-size: 0.8125rem; line-height: 1.5;">
+            Your payment is queued for verification. As soon as the admin confirms your blockchain transaction, your provider credentials unlock immediately in <strong>My Orders / Cart</strong>.
+          </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-primary" id="openOrdersFromCheckoutBtn" style="width: 100%;">
+            Track in My Orders / Cart &rarr;
+          </button>
+          <button type="button" class="btn btn-ghost" id="closeCheckoutDoneBtn" style="width: 100%;">
+            Done & Return to Catalog
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Unlocked Screen -->
+      <div id="checkoutStep3" style="display: none; margin-top: 1.5rem; text-align: center;">
+        <div style="height: 3.5rem; width: 3.5rem; margin-inline: auto; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-full); border: 2px solid var(--color-accent); background-color: rgba(74, 222, 128, 0.15); box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-accent">
+            <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </div>
+
+        <div style="margin-top: 1.25rem;">
+          <p class="text-muted" style="font-size: 0.875rem;">Payment verified. Your provider is unlocked:</p>
+          <p class="text-ink" style="font-size: 1.75rem; font-weight: 800; margin-top: 0.25rem; letter-spacing: -0.02em;" id="unlockedProviderName">Verified Host Gateway</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.75rem;">
+          <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="visitProviderLink" style="width: 100%;">
+            Visit Provider Website &rarr;
+          </a>
+          <button type="button" class="btn btn-ghost" id="viewDashboardBtn" style="width: 100%;">
+            Go to dashboard
+          </button>
+        </div>
+
+        <p class="text-faint" style="font-size: 0.75rem; margin-top: 1.25rem;">
+          The host name and credentials have been permanently saved to your dashboard.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD MODAL (Unlocked Providers) -->
+  <div class="modal-overlay" id="dashboardModal">
+    <div class="panel modal-card modal-lg">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Unlocked Providers</h2>
+          <p class="modal-desc" id="dashboardEmailLabel">user@proton.me</p>
+        </div>
+        <button type="button" class="modal-close" id="closeDashboardBtn" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div style="margin-top: 1.5rem;" id="dashboardContent">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MY ORDERS & CART MODAL -->
+  <div class="modal-overlay" id="ordersModal">
+    <div class="panel modal-card modal-xl">
+      <div class="modal-header">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <h2 class="modal-title">My Orders & Cart</h2>
+            <span class="chip text-accent" id="ordersCountChip">0 orders</span>
+          </div>
+          <p class="modal-desc">Track real-time blockchain approvals, order statuses & unlocked hosts</p>
+        </div>
+        <button type="button" class="modal-close" id="closeOrdersBtn" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Orders Filter Tabs -->
+      <div class="orders-filter-row" style="margin-top: 1.25rem;">
+        <div class="filter-pills">
+          <button type="button" class="order-filter-btn active" data-order-filter="all">All Orders <span class="badge-mini" id="modalAllFilterBadge">0</span></button>
+          <button type="button" class="order-filter-btn" data-order-filter="pending">
+            Pending <span class="badge-mini" id="modalPendingFilterBadge">0</span>
+          </button>
+          <button type="button" class="order-filter-btn" data-order-filter="approved">
+            Approved <span class="badge-mini" id="modalApprovedFilterBadge">0</span>
+          </button>
+          <button type="button" class="order-filter-btn" data-order-filter="cancelled">Cancelled <span class="badge-mini" id="modalCancelledFilterBadge">0</span></button>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="refreshOrdersBtn" title="Sync Network Orders">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      <div style="margin-top: 1.25rem;" id="ordersContent">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN PAYMENT CONTROL CENTER MODAL -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="panel modal-card modal-xl admin-modal-card">
+      <div class="modal-header">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <div class="admin-badge-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h2 class="modal-title">Admin Payment Verification Dashboard</h2>
+            <span class="chip-admin-role">Role: Administrator</span>
+          </div>
+          <p class="modal-desc">Review incoming customer payments, verify TXID hashes, and approve access permissions</p>
+        </div>
+        <button type="button" class="modal-close" id="closeAdminBtn" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Admin KPI Stats Bar -->
+      <div class="admin-stats-grid" style="margin-top: 1.25rem;">
+        <div class="admin-kpi-card">
+          <span class="admin-kpi-label">Total Orders</span>
+          <span class="admin-kpi-value text-ink" id="adminKpiTotal">0</span>
+        </div>
+        <div class="admin-kpi-card highlight-pending">
+          <span class="admin-kpi-label">Pending Approval</span>
+          <span class="admin-kpi-value text-warn" id="adminKpiPending">0</span>
+        </div>
+        <div class="admin-kpi-card highlight-approved">
+          <span class="admin-kpi-label">Approved & Unlocked</span>
+          <span class="admin-kpi-value text-accent" id="adminKpiApproved">0</span>
+        </div>
+        <div class="admin-kpi-card">
+          <span class="admin-kpi-label">Cancelled</span>
+          <span class="admin-kpi-value text-danger" id="adminKpiCancelled">0</span>
+        </div>
+        <div class="admin-kpi-card">
+          <span class="admin-kpi-label">Gross Revenue (USD)</span>
+          <span class="admin-kpi-value text-accent" id="adminKpiRevenue">$0</span>
+        </div>
+      </div>
+
+      <!-- Admin Filter & Search Row -->
+      <div class="admin-controls-bar" style="margin-top: 1.25rem;">
+        <div class="filter-pills">
+          <button type="button" class="admin-filter-btn active" data-admin-filter="all">All Orders</button>
+          <button type="button" class="admin-filter-btn" data-admin-filter="pending">
+            Pending <span class="badge-mini" id="adminPendingFilterBadge">0</span>
+          </button>
+          <button type="button" class="admin-filter-btn" data-admin-filter="approved">Approved</button>
+          <button type="button" class="admin-filter-btn" data-admin-filter="cancelled">Cancelled</button>
+        </div>
+
+        <div style="display: flex; gap: 0.6rem; align-items: center; flex: 1; justify-content: flex-end;">
+          <div class="search-input-box" style="min-width: 180px; flex: 1; max-width: 280px;">
+            <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="text" class="field search-field" id="adminSearchInput" placeholder="Filter by email, ORD, or TXID…" style="font-size: 0.78rem; padding-block: 0.4rem; padding-left: 2rem;" />
+          </div>
+
+          <button type="button" class="btn btn-ghost btn-sm" id="adminRefreshBtn" title="Sync Network Orders">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            <span>Sync</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin Orders List -->
+      <div style="margin-top: 1.25rem;" id="adminOrdersContent">
+        <!-- Rendered dynamically -->
+      </div>
+  <!-- PROFILE & SECURITY MODAL -->
+  <div class="modal-overlay" id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+    <div class="panel modal-card profile-modal-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div class="profile-header-avatar" id="profileHeaderAvatar">U</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <h2 class="modal-title" id="profileModalTitle">Account Profile</h2>
+              <span class="chip text-accent" id="profileRoleBadge">Verified User</span>
+            </div>
+            <p class="modal-desc">View your credentials and manage your account security</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" id="closeProfileBtn" aria-label="Close profile modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m6 6 12 12M18 6 6 18"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Account Summary Info Cards -->
+      <div class="profile-info-grid" style="margin-top: 1.25rem;">
+        <!-- Email Display Card -->
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <span class="profile-card-label">Current Email</span>
+            <span class="profile-badge-verified">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              Active
+            </span>
+          </div>
+          <div class="profile-field-wrap">
+            <input type="text" readonly class="profile-readonly-field" id="profileDisplayEmail" value="user@example.com" />
+            <button type="button" class="btn btn-ghost btn-sm profile-copy-btn" id="profileCopyEmailBtn" title="Copy email address">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="profile-meta-row">
+            <span class="text-faint" id="profileMemberSince">Member since: Recent</span>
+            <span class="text-faint font-mono" id="profileUserId">UID: usr_...</span>
+          </div>
+        </div>
+
+        <!-- Current Password Display Card -->
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <span class="profile-card-label">Current Password</span>
+            <span class="profile-badge-verified" id="profilePwdStatusBadge">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Active Account
+            </span>
+          </div>
+          <div class="profile-field-wrap">
+            <input type="text" readonly class="profile-readonly-field font-mono" id="profileDisplayPassword" placeholder="Loading password…" />
+            <button type="button" class="btn btn-ghost btn-sm profile-toggle-btn" id="profileTogglePasswordBtn" title="Toggle password visibility">
+              <svg class="profile-eye-off" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+              <svg class="profile-eye" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span id="profileTogglePasswordText">Hide</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm profile-copy-btn" id="profileCopyPasswordBtn" title="Copy password">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            </button>
+          </div>
+          <div class="profile-meta-row">
+            <span class="text-faint" id="profilePwdNote">Active account password visible</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Change Password Section -->
+      <div class="profile-change-section" style="margin-top: 1.5rem;">
+        <div class="profile-section-title-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-accent">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <h3 class="profile-section-title">Change Account Password</h3>
+        </div>
+        <p class="modal-desc" style="font-size: 0.8rem; margin-top: 0.25rem;">
+          Update your password anytime. Changes take effect across your sessions instantly.
+        </p>
+
+        <!-- Profile Form Error / Success Banner -->
+        <div id="profileAlertBanner" class="auth-banner" style="display: none; margin-top: 0.85rem;" role="alert">
+          <span class="auth-banner-icon" id="profileAlertIcon"></span>
+          <span class="auth-banner-text" id="profileAlertText"></span>
+        </div>
+
+        <form id="profileChangePasswordForm" style="margin-top: 1rem;" novalidate>
+          <div class="form-grid-2">
+            <!-- New Password -->
+            <div class="auth-field-group">
+              <label class="auth-label" for="profileNewPassword">New Password</label>
+              <div class="auth-input-wrapper">
+                <span class="auth-input-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <input id="profileNewPassword" type="password" required minlength="6" class="auth-field" placeholder="New secure password" autocomplete="new-password" />
+                <button type="button" class="auth-toggle-pwd" id="toggleProfileNewPasswordBtn" aria-label="Toggle password visibility">
+                  <svg class="icon-eye-off" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                  <svg class="icon-eye" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <div id="profilePasswordStrengthBox" class="auth-strength-box" style="display: none;">
+                <div class="auth-strength-meter">
+                  <span class="strength-bar" id="profileStrBar1"></span>
+                  <span class="strength-bar" id="profileStrBar2"></span>
+                  <span class="strength-bar" id="profileStrBar3"></span>
+                  <span class="strength-bar" id="profileStrBar4"></span>
+                </div>
+                <span class="strength-text" id="profileStrengthText">Min. 6 characters</span>
+              </div>
+            </div>
+
+            <!-- Confirm New Password -->
+            <div class="auth-field-group">
+              <div class="auth-label-row">
+                <label class="auth-label" for="profileConfirmPassword">Confirm New Password</label>
+                <span class="auth-match-indicator" id="profileMatchIndicator" style="display: none;"></span>
+              </div>
+              <div class="auth-input-wrapper">
+                <span class="auth-input-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
+                <input id="profileConfirmPassword" type="password" minlength="6" class="auth-field" placeholder="Confirm new password" autocomplete="new-password" />
+                <button type="button" class="auth-toggle-pwd" id="toggleProfileConfirmPasswordBtn" aria-label="Toggle confirm password visibility">
+                  <svg class="icon-eye-off" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                  <svg class="icon-eye" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
+            <button type="submit" class="btn btn-primary" id="profileSubmitPasswordBtn">
+              <span class="auth-spinner" id="profileSubmitSpinner" style="display: none;"></span>
+              <span id="profileSubmitBtnText">Update Password</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive App Toast Notifications -->
+  <div id="appToastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Three.js and Vanta.js NET Interactive 3D Background -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof window.VANTA !== 'undefined' && window.VANTA.NET) {
+        window.vantaNetEffect = window.VANTA.NET({
+          el: "#vanta-bg",
+          mouseControls: true,
+          touchControls: true,
+          gyroControls: false,
+          minHeight: 200.00,
+          minWidth: 200.00,
+          scale: 1.00,
+          scaleMobile: 1.00,
+          color: 0x3fff45,
+          backgroundColor: 0x06080c
+        });
+      }
+    });
+  </script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
