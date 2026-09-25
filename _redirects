@@ -1,0 +1,2 @@
+# Static routes are served directly from the generated HTML files.
+# Keep this file empty to avoid redirect loops during Cloudflare deploys.
