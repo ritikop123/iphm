@@ -201,8 +201,10 @@ $$ language plpgsql security definer;
 
 drop trigger if exists on_order_approved on public.orders;
 create trigger on_order_approved
-  before insert or update on public.orders
-  for each row execute procedure public.handle_order_approval();
+  before update on public.orders
+  for each row
+  when (OLD.status is distinct from NEW.status and NEW.status = 'approved')
+  execute procedure public.handle_order_approval();
 
 -- Backfill any existing approved orders in Supabase that are missing provider credentials
 update public.orders o
