@@ -1930,7 +1930,7 @@ function initCheckout() {
 
 
   if (txidForm) {
-    txidForm.addEventListener('submit', (e) => {
+    txidForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const txid = document.getElementById('txidInput').value.trim();
       const errorBanner = document.getElementById('txidErrorBanner');
@@ -1944,13 +1944,14 @@ function initCheckout() {
 
       errorBanner.style.display = 'none';
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Verifying and recording transaction…';
+      submitBtn.textContent = 'Verifying and recording payment…';
 
-      setTimeout(async () => {
+      try {
+        await handlePaymentSubmission(txid);
+      } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'I sent it — check my payment';
-        await handlePaymentSubmission(txid);
-      }, 500);
+      }
     });
   }
 
@@ -2054,17 +2055,17 @@ function setCheckoutStep(step) {
   const t2 = document.getElementById('stepText2');
   const t3 = document.getElementById('stepText3');
 
-  step1.style.display = step === 1 ? 'block' : 'none';
-  step2.style.display = step === 2 ? 'block' : 'none';
-  step3.style.display = step === 3 ? 'block' : 'none';
+  if (step1) step1.style.display = step === 1 ? 'block' : 'none';
+  if (step2) step2.style.display = step === 2 ? 'block' : 'none';
+  if (step3) step3.style.display = step === 3 ? 'block' : 'none';
 
-  b1.className = `step-bar ${step >= 1 ? 'active' : ''}`;
-  b2.className = `step-bar ${step >= 2 ? 'active' : ''} ${step === 2 ? 'pulse' : ''}`;
-  b3.className = `step-bar ${step >= 3 ? 'active' : ''}`;
+  if (b1) b1.className = `step-bar ${step >= 1 ? 'active' : ''}`;
+  if (b2) b2.className = `step-bar ${step >= 2 ? 'active' : ''} ${step === 2 ? 'pulse' : ''}`;
+  if (b3) b3.className = `step-bar ${step >= 3 ? 'active' : ''}`;
 
-  t1.className = `step-text ${step >= 1 ? 'active' : ''}`;
-  t2.className = `step-text ${step >= 2 ? 'active' : ''}`;
-  t3.className = `step-text ${step >= 3 ? 'active' : ''}`;
+  if (t1) t1.className = `step-text ${step >= 1 ? 'active' : ''}`;
+  if (t2) t2.className = `step-text ${step >= 2 ? 'active' : ''}`;
+  if (t3) t3.className = `step-text ${step >= 3 ? 'active' : ''}`;
 }
 
 function showCheckoutStep3(providerId, optionalOrder) {
@@ -3412,20 +3413,19 @@ async function syncProvidersFromSupabase() {
     const isEditingAdmin = Boolean(state.isAdmin || document.getElementById('adminPage'));
     const adminCols = 'id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden, revealed_name, revealed_url, sort_order';
     const publicCols = 'id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden, sort_order';
+    const baseCols = 'id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden, revealed_name, revealed_url';
 
     let { data, error } = await supabase
       .from('providers')
       .select(isEditingAdmin ? adminCols : publicCols)
-      .order('sort_order', { ascending: true })
       .order('id', { ascending: true });
 
-    if (error && isEditingAdmin) {
+    if (error || !Array.isArray(data)) {
       const fallback = await supabase
         .from('providers')
-        .select(publicCols)
-        .order('sort_order', { ascending: true })
+        .select(baseCols)
         .order('id', { ascending: true });
-      if (!fallback.error) {
+      if (!fallback.error && Array.isArray(fallback.data)) {
         data = fallback.data;
         error = null;
       }
@@ -3621,6 +3621,7 @@ function renderAdminOrdersList() {
         const secret = getDecryptedProviderSecret(order.provider_id, order);
         const displayAdminBrand = (order.provider_name && !order.provider_name.includes('(')) ? order.provider_name : (prov?.revealedName || prov?.revealed_name || secret.name || order.provider_name || 'Server Access');
         const displayAdminUrl = (order.provider_url && order.provider_url !== 'null') ? order.provider_url : (prov?.revealedUrl || prov?.revealed_url || secret.url || '');
+        const explorerUrl = getExplorerUrl(order.payment_coin, order.txid);
 
         return `
           <div class="order-item-card ${isPending ? 'is-pending' : isApproved ? 'is-approved' : 'is-cancelled'}">
@@ -3795,10 +3796,14 @@ async function adminApproveOrder(id, orderRef) {
       updated_at: new Date().toISOString()
     };
     let query = supabase.from('orders').update(updatePayload);
-    if (typeof id === 'string' && id.startsWith('ord-')) {
-      query = query.eq('order_ref', orderRef);
-    } else {
-      query = query.eq('id', id);
+    const idValue = String(id || '');
+    const refValue = String(orderRef || '');
+    if (refValue) {
+      query = query.eq('order_ref', refValue);
+    } else if (idValue && !idValue.startsWith('local-')) {
+      query = query.eq('id', idValue);
+    } else if (idValue) {
+      query = query.eq('id', idValue);
     }
     await query;
   } catch (err) {
@@ -3842,10 +3847,14 @@ async function adminRejectOrder(id, orderRef) {
       status: 'cancelled',
       updated_at: new Date().toISOString()
     });
-    if (typeof id === 'string' && id.startsWith('ord-')) {
-      query = query.eq('order_ref', orderRef);
-    } else {
-      query = query.eq('id', id);
+    const idValue = String(id || '');
+    const refValue = String(orderRef || '');
+    if (refValue) {
+      query = query.eq('order_ref', refValue);
+    } else if (idValue && !idValue.startsWith('local-')) {
+      query = query.eq('id', idValue);
+    } else if (idValue) {
+      query = query.eq('id', idValue);
     }
     await query;
   } catch (err) {

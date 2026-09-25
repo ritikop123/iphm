@@ -249,12 +249,16 @@ create table if not exists public.providers (
   revealed_name text default 'Verified Host Gateway',
   revealed_url text default 'https://iphm.network',
   is_hidden boolean default false,
+  sort_order integer not null default 0,
   created_at timestamptz default timezone('utc'::text, now()) not null,
   updated_at timestamptz default timezone('utc'::text, now()) not null
 );
 
 -- Enable RLS
 alter table public.providers enable row level security;
+
+-- Index provider ordering to match admin card sort flow
+create index if not exists idx_providers_sort_order on public.providers(sort_order);
 
 -- Everyone can read active non-hidden providers; admins can read all
 drop policy if exists "Anyone can read providers" on public.providers;
