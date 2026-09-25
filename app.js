@@ -172,8 +172,43 @@ function loadInitialUnlocked() {
   return [];
 }
 
+function purgeStaleProviderCache() {
+  try {
+    const stored = localStorage.getItem('iphm_providers');
+    if (!stored) return;
+
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) {
+      localStorage.removeItem('iphm_providers');
+      return;
+    }
+
+    const hasLegacyDemoCatalog = parsed.some(provider => {
+      const city = String(provider.city || '').trim();
+      const country = String(provider.country || '').trim();
+      return (
+        city === 'Amsterdam' ||
+        city === 'Frankfurt' ||
+        city === 'Zurich' ||
+        city === 'Reykjavik' ||
+        country === 'Netherland' ||
+        country === 'Germany' ||
+        country === 'Switzerland' ||
+        country === 'Iceland'
+      );
+    });
+
+    if (hasLegacyDemoCatalog) {
+      localStorage.removeItem('iphm_providers');
+    }
+  } catch (e) {
+    localStorage.removeItem('iphm_providers');
+  }
+}
+
 function loadInitialProviders() {
   // Start from an empty catalog so cards are created by the database/admin flow.
+  purgeStaleProviderCache();
   localStorage.removeItem('iphm_providers');
   return [];
 }
@@ -234,6 +269,7 @@ function saveProvidersLocally() {
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
+  purgeStaleProviderCache();
   initUI();
   initFAQ();
   initAuth();
