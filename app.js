@@ -2959,10 +2959,15 @@ async function saveProviderCard(e) {
     state.providers.unshift(newProvider);
 
     try {
+      const safeRevealedName = revealedName || 'Verified Host Gateway';
+      const safeRevealedUrl = revealedUrl || 'https://iphm.network';
+
       const { data } = await supabase.from('providers').insert([{
         city, country, country_code: countryCode, type, pps, pps_num: ppsNum,
         nic, spoofing, updated_ago: 'Just now', price_usd: priceUsd,
-        revealed_name: revealedName, revealed_url: revealedUrl, is_hidden: !isVisible
+        revealed_name: safeRevealedName,
+        revealed_url: safeRevealedUrl,
+        is_hidden: !isVisible
       }]).select();
       if (data?.[0]?.id) {
         newProvider.id = data[0].id;

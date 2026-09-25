@@ -243,10 +243,19 @@ revoke select on public.providers from anon, authenticated;
 grant select (id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden, created_at, updated_at) 
 on public.providers to anon, authenticated;
 
--- Scrub any existing upstream secrets from the database table
+-- Repair any rows that were created without the required public metadata
+alter table public.providers
+  alter column revealed_name set default 'Verified Host Gateway',
+  alter column revealed_url set default 'https://iphm.network';
+
 update public.providers
-set revealed_name = 'Verified Host Gateway',
-    revealed_url = 'https://iphm.network';
+set revealed_name = coalesce(revealed_name, 'Verified Host Gateway'),
+    revealed_url = coalesce(revealed_url, 'https://iphm.network')
+where revealed_name is null or revealed_url is null;
+
+alter table public.providers
+  alter column revealed_name set not null,
+  alter column revealed_url set not null;
 
 -- IMPORTANT: Do not seed demo provider cards here.
 -- The admin must create every listing manually in Supabase and publish it with is_hidden = false.
