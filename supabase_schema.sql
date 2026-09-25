@@ -174,6 +174,46 @@ on public.orders for update
 using (public.is_admin());
 
 -- --------------------------------------------------------------------
+-- 6.1 AUTOMATIC PROVIDER CREDENTIALS REVELATION ON APPROVAL TRIGGER
+-- --------------------------------------------------------------------
+create or replace function public.handle_order_approval()
+returns trigger as $$
+declare
+  p_name text;
+  p_url text;
+begin
+  if NEW.status = 'approved' then
+    select revealed_name, revealed_url into p_name, p_url
+    from public.providers
+    where id = NEW.provider_id;
+
+    if p_name is not null and p_name <> '' and (NEW.provider_name is null or NEW.provider_name like '%(VPS)' or NEW.provider_name like '%(Dedicated)' or NEW.provider_name = '' or NEW.provider_name like '%Server%') then
+      NEW.provider_name := p_name;
+    end if;
+
+    if p_url is not null and p_url <> '' and (NEW.provider_url is null or NEW.provider_url = '' or NEW.provider_url = 'null') then
+      NEW.provider_url := p_url;
+    end if;
+  end if;
+  return NEW;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_order_approved on public.orders;
+create trigger on_order_approved
+  before insert or update on public.orders
+  for each row execute procedure public.handle_order_approval();
+
+-- Backfill any existing approved orders in Supabase that are missing provider credentials
+update public.orders o
+set provider_name = coalesce(nullif(p.revealed_name, ''), o.provider_name),
+    provider_url = coalesce(nullif(p.revealed_url, ''), o.provider_url)
+from public.providers p
+where o.provider_id = p.id
+  and o.status = 'approved'
+  and (o.provider_url is null or o.provider_url = '' or o.provider_url = 'null' or o.provider_name like '%(VPS)' or o.provider_name like '%(Dedicated)');
+
+-- --------------------------------------------------------------------
 -- 7. ENABLE REALTIME UPDATES FOR ORDERS (Idempotent)
 -- --------------------------------------------------------------------
 do $$

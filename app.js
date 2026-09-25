@@ -35,16 +35,34 @@ function decryptVaultSecret(b64) {
   }
 }
 
-function getDecryptedProviderSecret(providerId) {
-  const pIdStr = String(providerId || 1);
-  const entry = ENCRYPTED_PROVIDER_VAULT[pIdStr];
-  if (entry) {
+function getDecryptedProviderSecret(providerId, optionalOrder) {
+  const pIdStr = String(providerId || '');
+
+  // 1. If an approved order is provided with revealed credentials, use them directly
+  if (optionalOrder) {
+    const isMasked = !optionalOrder.provider_name || optionalOrder.provider_name.includes('(') || optionalOrder.provider_name.includes('Server');
+    const orderName = isMasked ? '' : optionalOrder.provider_name;
+    const orderUrl = (optionalOrder.provider_url && optionalOrder.provider_url !== 'null') ? optionalOrder.provider_url : '';
+    if (orderName || orderUrl) {
+      return {
+        name: orderName,
+        url: orderUrl
+      };
+    }
+  }
+
+  // 2. Look in state.providers
+  const prov = state?.providers?.find(p => String(p.id) === pIdStr);
+  const provName = prov?.revealedName || prov?.revealed_name || '';
+  const provUrl = prov?.revealedUrl || prov?.revealed_url || '';
+  if (provName || provUrl) {
     return {
-      name: decryptVaultSecret(entry.name),
-      url: decryptVaultSecret(entry.url)
+      name: provName,
+      url: provUrl
     };
   }
-  // Check if custom encrypted secret in storage
+
+  // 3. Check custom encrypted secret in storage
   try {
     const customVault = JSON.parse(localStorage.getItem('iphm_vault_custom') || '{}');
     if (customVault[pIdStr]) {
@@ -55,9 +73,18 @@ function getDecryptedProviderSecret(providerId) {
     }
   } catch (e) {}
 
+  // 4. Check static vault
+  const entry = ENCRYPTED_PROVIDER_VAULT[pIdStr];
+  if (entry) {
+    return {
+      name: decryptVaultSecret(entry.name),
+      url: decryptVaultSecret(entry.url)
+    };
+  }
+
   return {
-    name: 'Verified Host Access',
-    url: 'https://iphm.network'
+    name: '',
+    url: ''
   };
 }
 
@@ -123,12 +150,6 @@ function loadInitialOrders() {
             const expectedName = `${clean.city || 'Amsterdam'}, ${clean.country || 'Netherland'} (${clean.machine_type || 'VPS'})`;
             if (clean.provider_name !== expectedName || clean.provider_url !== null) {
               clean.provider_name = expectedName;
-              clean.provider_url = null;
-              changed = true;
-            }
-          } else {
-            // For approved orders, strip static raw URLs so dynamic vault decryption is used
-            if (clean.provider_url !== null) {
               clean.provider_url = null;
               changed = true;
             }
@@ -2046,14 +2067,27 @@ function setCheckoutStep(step) {
   t3.className = `step-text ${step >= 3 ? 'active' : ''}`;
 }
 
-function showCheckoutStep3(providerId) {
-  const secret = getDecryptedProviderSecret(providerId);
+function showCheckoutStep3(providerId, optionalOrder) {
+  const order = optionalOrder || (state.currentOrder?.ref ? state.orders.find(o => o.order_ref === state.currentOrder.ref) : null);
+  const prov = state.providers.find(p => String(p.id) === String(providerId)) || findProviderForOrder(order);
+  const secret = getDecryptedProviderSecret(providerId, order);
+
+  let hostName = secret.name || order?.provider_name;
+  if (!hostName || hostName.includes('(') || hostName.includes('Server')) {
+    hostName = prov?.revealedName || prov?.revealed_name || order?.provider_name || `${prov?.city || ''} Host Access`.trim() || 'Verified Host Gateway';
+  }
+
+  let hostUrl = secret.url || order?.provider_url || prov?.revealedUrl || prov?.revealed_url || 'https://iphm.network';
+  if (!hostUrl || hostUrl === 'null') {
+    hostUrl = 'https://iphm.network';
+  }
+
   const nameEl = document.getElementById('unlockedProviderName');
   const linkEl = document.getElementById('visitProviderLink');
-  if (nameEl) nameEl.textContent = secret.name || 'Verified Host Gateway';
+  if (nameEl) nameEl.textContent = hostName;
   if (linkEl) {
-    linkEl.href = secret.url || 'https://iphm.network';
-    linkEl.textContent = `Launch ${secret.name || 'Provider Portal'} \u2192`;
+    linkEl.href = hostUrl;
+    linkEl.textContent = `Launch ${hostName} \u2192`;
   }
   setCheckoutStep(3);
 }
@@ -2130,26 +2164,48 @@ async function handlePaymentSubmission(txid) {
 }
 
 function unlockProviderFromOrder(order) {
-  // Reveal decrypted upstream secret ONLY upon confirmed approval
-  const secret = getDecryptedProviderSecret(order.provider_id);
+  if (!order) return;
+  const prov = findProviderForOrder(order);
+  const secret = getDecryptedProviderSecret(order.provider_id, order);
+
+  let hostName = secret.name || order.provider_name;
+  const isMaskedTitle = !hostName || hostName.includes('(') || hostName.includes('Server');
+  if (isMaskedTitle) {
+    if (prov?.revealedName || prov?.revealed_name) {
+      hostName = prov.revealedName || prov.revealed_name;
+    } else if (order.provider_name && !order.provider_name.includes('(')) {
+      hostName = order.provider_name;
+    } else {
+      hostName = `${order.city || prov?.city || 'Premium'} Server Access`;
+    }
+  }
+
+  let hostUrl = secret.url || order.provider_url || prov?.revealedUrl || prov?.revealed_url;
+  if (!hostUrl || hostUrl === 'null') {
+    hostUrl = 'https://iphm.network';
+  }
+
   const purchaseRecord = {
     orderRef: order.order_ref,
     txid: order.txid,
     date: new Date(order.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     providerId: order.provider_id,
-    city: order.city,
-    country: order.country,
-    type: order.machine_type,
-    name: secret.name || order.provider_name || `${order.city || ''} Server`,
-    url: secret.url || order.provider_url || 'https://iphm.network',
-    pps: order.pps || '150K pps',
-    nic: order.nic || '10 GBPS'
+    city: order.city || prov?.city || 'Amsterdam',
+    country: order.country || prov?.country || 'Netherland',
+    type: order.machine_type || prov?.type || 'VPS',
+    name: hostName,
+    url: hostUrl,
+    pps: order.pps || prov?.pps || '150K pps',
+    nic: order.nic || prov?.nic || '10 GBPS'
   };
 
-  if (!state.unlockedProviders.some(p => p.orderRef === purchaseRecord.orderRef)) {
+  const existingIdx = state.unlockedProviders.findIndex(p => p.orderRef === purchaseRecord.orderRef);
+  if (existingIdx >= 0) {
+    state.unlockedProviders[existingIdx] = purchaseRecord;
+  } else {
     state.unlockedProviders.unshift(purchaseRecord);
-    localStorage.setItem('iphm_unlocked', JSON.stringify(state.unlockedProviders));
   }
+  localStorage.setItem('iphm_unlocked', JSON.stringify(state.unlockedProviders));
 
   updateStats();
   renderProviders();
@@ -2179,6 +2235,38 @@ async function loadUserPurchasesFromSupabase(userId, userEmail) {
     }
 
     if (!error && Array.isArray(data)) {
+      // Ensure approved orders resolve provider secrets even if not populated in orders row
+      const approvedNeedingSecrets = data.filter(item =>
+        item.status === 'approved' && (!item.provider_url || item.provider_url === 'null' || !item.provider_name || item.provider_name.includes('('))
+      );
+      if (approvedNeedingSecrets.length > 0) {
+        const pIds = [...new Set(approvedNeedingSecrets.map(o => o.provider_id))];
+        try {
+          const { data: pList } = await supabase
+            .from('providers')
+            .select('id, revealed_name, revealed_url, city, country, type')
+            .in('id', pIds);
+          if (Array.isArray(pList)) {
+            const pMap = new Map(pList.map(p => [String(p.id), p]));
+            data.forEach(item => {
+              if (item.status === 'approved') {
+                const foundProv = pMap.get(String(item.provider_id));
+                if (foundProv) {
+                  if (foundProv.revealed_name && (!item.provider_name || item.provider_name.includes('('))) {
+                    item.provider_name = foundProv.revealed_name;
+                  }
+                  if (foundProv.revealed_url && (!item.provider_url || item.provider_url === 'null')) {
+                    item.provider_url = foundProv.revealed_url;
+                  }
+                }
+              }
+            });
+          }
+        } catch (provLookupErr) {
+          console.warn('Could not query provider credentials for approved items:', provLookupErr);
+        }
+      }
+
       state.orders = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       localStorage.setItem('iphm_orders', JSON.stringify(state.orders));
     }
@@ -2413,9 +2501,16 @@ function renderOrdersList() {
         let unlockedUrl = null;
 
         if (isApproved) {
-          const secret = getDecryptedProviderSecret(order.provider_id);
-          displayHostTitle = secret.name || order.provider_name || `${city}, ${country} Server`;
-          unlockedUrl = secret.url || order.provider_url || 'https://iphm.network';
+          const secret = getDecryptedProviderSecret(order.provider_id, order);
+          const prov = findProviderForOrder(order);
+          let hostName = secret.name || order.provider_name;
+          const isMaskedTitle = !hostName || hostName.includes('(') || hostName.includes('Server');
+          if (isMaskedTitle) {
+            displayHostTitle = prov?.revealedName || prov?.revealed_name || order.provider_name || `${city}, ${country} Server`;
+          } else {
+            displayHostTitle = hostName;
+          }
+          unlockedUrl = secret.url || order.provider_url || prov?.revealedUrl || prov?.revealed_url || 'https://iphm.network';
         }
 
         const formattedDate = order.created_at
@@ -2506,9 +2601,25 @@ function renderOrdersList() {
                     <span>Host Access Granted &amp; Verified</span>
                   </div>
                   <span class="unlocked-provider-highlight">${displayHostTitle} Access Active</span>
-                  <span class="unlocked-desc">Permanent server deployment and IP credentials unlocked. You can connect and configure via the provider gateway.</span>
+                  <div class="unlocked-credentials-box" style="margin-top: 0.65rem; padding: 0.85rem; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--color-line-bright); border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                      <span style="font-size: 0.78rem; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Provider Brand:</span>
+                      <span class="font-mono text-ink font-semibold" style="font-size: 0.95rem;">${displayHostTitle}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                      <span style="font-size: 0.78rem; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Provider URL / Portal:</span>
+                      <a href="${unlockedUrl || '#'}" target="_blank" rel="noopener noreferrer" class="font-mono text-accent" style="font-size: 0.85rem; text-decoration: underline; word-break: break-all;">
+                        ${unlockedUrl || 'https://iphm.network'}
+                      </a>
+                    </div>
+                  </div>
+                  <span class="unlocked-desc" style="margin-top: 0.5rem; display: block;">Permanent server deployment and IP credentials unlocked. You can connect and configure via the provider gateway.</span>
                 </div>
-                <div class="unlocked-actions">
+                <div class="unlocked-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-ghost btn-sm copy-provider-url-btn" data-url="${unlockedUrl || ''}" title="Copy Provider URL">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                    <span>Copy URL</span>
+                  </button>
                   <a href="${unlockedUrl || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm unlocked-portal-btn">
                     <span>Launch Provider Portal</span>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
@@ -2587,6 +2698,14 @@ function renderOrdersList() {
     btn.addEventListener('click', () => {
       const ref = btn.getAttribute('data-ref');
       copyToClipboard(ref, btn, 'Copy');
+    });
+  });
+
+  // Wire copy buttons for Unlocked Provider URL
+  container.querySelectorAll('.copy-provider-url-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url = btn.getAttribute('data-url');
+      if (url) copyToClipboard(url, btn, 'Copy URL');
     });
   });
 }
@@ -3069,6 +3188,66 @@ async function deleteProvider(id) {
   showToast('Provider Deleted', `Listing "${provider.city}, ${provider.country}" was removed.`, 'warn');
 }
 
+async function moveProviderUp(id) {
+  const idx = state.providers.findIndex(p => String(p.id) === String(id));
+  if (idx <= 0) return; // Already at top
+  const prev = state.providers[idx - 1];
+  const curr = state.providers[idx];
+
+  // Swap sortOrder values
+  const tmpOrder = curr.sortOrder ?? idx;
+  curr.sortOrder = prev.sortOrder ?? (idx - 1);
+  prev.sortOrder = tmpOrder;
+
+  // Re-sort by sortOrder
+  state.providers.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+  saveProvidersLocally();
+  renderAdminProvidersList();
+  renderProviders();
+
+  // Persist to Supabase
+  try {
+    const idA = parseInt(curr.id, 10), idB = parseInt(prev.id, 10);
+    await Promise.all([
+      supabase.from('providers').update({ sort_order: curr.sortOrder }).eq('id', isNaN(idA) ? curr.id : idA),
+      supabase.from('providers').update({ sort_order: prev.sortOrder }).eq('id', isNaN(idB) ? prev.id : idB),
+    ]);
+  } catch (err) {
+    console.warn('Supabase move up:', err);
+  }
+}
+
+async function moveProviderDown(id) {
+  const idx = state.providers.findIndex(p => String(p.id) === String(id));
+  if (idx < 0 || idx >= state.providers.length - 1) return; // Already at bottom
+  const curr = state.providers[idx];
+  const next = state.providers[idx + 1];
+
+  // Swap sortOrder values
+  const tmpOrder = curr.sortOrder ?? idx;
+  curr.sortOrder = next.sortOrder ?? (idx + 1);
+  next.sortOrder = tmpOrder;
+
+  // Re-sort by sortOrder
+  state.providers.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+  saveProvidersLocally();
+  renderAdminProvidersList();
+  renderProviders();
+
+  // Persist to Supabase
+  try {
+    const idA = parseInt(curr.id, 10), idB = parseInt(next.id, 10);
+    await Promise.all([
+      supabase.from('providers').update({ sort_order: curr.sortOrder }).eq('id', isNaN(idA) ? curr.id : idA),
+      supabase.from('providers').update({ sort_order: next.sortOrder }).eq('id', isNaN(idB) ? next.id : idB),
+    ]);
+  } catch (err) {
+    console.warn('Supabase move down:', err);
+  }
+}
+
 function renderAdminProvidersList() {
   const container = document.getElementById('adminProvidersContent');
   if (!container) return;
@@ -3141,6 +3320,16 @@ function renderAdminProvidersList() {
             <span>${isHidden ? 'Hidden (Unlisted)' : 'Active (Public)'}</span>
           </span>
 
+          <button type="button" class="btn-action-move move-provider-up-btn" data-id="${provider.id}" title="Move card up">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+            <span>Up</span>
+          </button>
+
+          <button type="button" class="btn-action-move move-provider-down-btn" data-id="${provider.id}" title="Move card down">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <span>Down</span>
+          </button>
+
           <button type="button" class="btn-action-edit edit-provider-btn" data-id="${provider.id}" title="Edit card details">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             <span>Edit</span>
@@ -3169,6 +3358,14 @@ function renderAdminProvidersList() {
 }
 
 function attachAdminProviderCardEvents() {
+  document.querySelectorAll('.move-provider-up-btn').forEach(btn => {
+    btn.addEventListener('click', () => moveProviderUp(btn.getAttribute('data-id')));
+  });
+
+  document.querySelectorAll('.move-provider-down-btn').forEach(btn => {
+    btn.addEventListener('click', () => moveProviderDown(btn.getAttribute('data-id')));
+  });
+
   document.querySelectorAll('.edit-provider-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
@@ -3213,18 +3410,20 @@ function updateAdminProviderCounts() {
 async function syncProvidersFromSupabase() {
   try {
     const isEditingAdmin = Boolean(state.isAdmin || document.getElementById('adminPage'));
-    const adminCols = 'id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden, revealed_name, revealed_url';
-    const publicCols = 'id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden';
+    const adminCols = 'id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden, revealed_name, revealed_url, sort_order';
+    const publicCols = 'id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden, sort_order';
 
     let { data, error } = await supabase
       .from('providers')
       .select(isEditingAdmin ? adminCols : publicCols)
+      .order('sort_order', { ascending: true })
       .order('id', { ascending: true });
 
     if (error && isEditingAdmin) {
       const fallback = await supabase
         .from('providers')
         .select(publicCols)
+        .order('sort_order', { ascending: true })
         .order('id', { ascending: true });
       if (!fallback.error) {
         data = fallback.data;
@@ -3261,7 +3460,8 @@ async function syncProvidersFromSupabase() {
         priceLtc: d.price_ltc || (Number(d.price_usd) / (ratesState.LTC || 73.95)).toFixed(2),
         revealedName: d.revealed_name || undefined,
         revealedUrl: d.revealed_url || undefined,
-        isHidden: Boolean(d.is_hidden)
+        isHidden: Boolean(d.is_hidden),
+        sortOrder: d.sort_order ?? d.id
       }));
 
       // Preserve any locally added providers not yet synced
@@ -3417,7 +3617,10 @@ function renderAdminOrdersList() {
           : `<span class="status-pill status-cancelled">Cancelled</span>`;
 
         const formattedDate = order.created_at ? new Date(order.created_at).toLocaleString() : 'Recent';
-        const explorerUrl = getExplorerUrl(order.payment_coin, order.txid);
+        const prov = findProviderForOrder(order);
+        const secret = getDecryptedProviderSecret(order.provider_id, order);
+        const displayAdminBrand = (order.provider_name && !order.provider_name.includes('(')) ? order.provider_name : (prov?.revealedName || prov?.revealed_name || secret.name || order.provider_name || 'Server Access');
+        const displayAdminUrl = (order.provider_url && order.provider_url !== 'null') ? order.provider_url : (prov?.revealedUrl || prov?.revealed_url || secret.url || '');
 
         return `
           <div class="order-item-card ${isPending ? 'is-pending' : isApproved ? 'is-approved' : 'is-cancelled'}">
@@ -3428,7 +3631,7 @@ function renderAdminOrdersList() {
                   <span style="font-size: 0.875rem; color: var(--color-ink); font-weight: 700;">${order.user_email || 'guest'}</span>
                   <span class="${order.machine_type === 'VPS' ? 'badge-vps' : 'badge-dedi'}">${order.machine_type || 'VPS'}</span>
                 </div>
-                <span class="order-meta-sub">${order.provider_name} (${order.city}, ${order.country}) • Submitted: ${formattedDate}</span>
+                <span class="order-meta-sub">${displayAdminBrand} (${order.city}, ${order.country}) • Submitted: ${formattedDate}</span>
               </div>
               <div>${statusBadge}</div>
             </div>
@@ -3449,7 +3652,7 @@ function renderAdminOrdersList() {
               <div>
                 <div class="order-detail-label">Provider URL</div>
                 <div class="order-detail-val" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                  <a href="${order.provider_url}" target="_blank" class="text-accent" style="text-decoration: underline;">${order.provider_url || 'N/A'}</a>
+                  ${displayAdminUrl ? `<a href="${displayAdminUrl}" target="_blank" class="text-accent" style="text-decoration: underline;">${displayAdminUrl}</a>` : `<span class="text-muted">Awaiting Approval</span>`}
                 </div>
               </div>
             </div>
@@ -3525,26 +3728,73 @@ function renderAdminOrdersList() {
 }
 
 async function adminApproveOrder(id, orderRef) {
-  // 1. Update local state
   const target = state.adminOrders.find(o => o.id == id || o.order_ref === orderRef);
+  const localTarget = state.orders.find(o => o.id == id || o.order_ref === orderRef);
+  const approvedItem = target || localTarget;
+
+  // Resolve revealed credentials for this provider
+  let revealedName = '';
+  let revealedUrl = '';
+  if (approvedItem) {
+    const prov = state.providers.find(p => String(p.id) === String(approvedItem.provider_id));
+    if (prov) {
+      revealedName = prov.revealedName || prov.revealed_name || '';
+      revealedUrl = prov.revealedUrl || prov.revealed_url || '';
+    }
+    if (!revealedName || !revealedUrl) {
+      try {
+        const { data: pData } = await supabase
+          .from('providers')
+          .select('revealed_name, revealed_url, city, country, type')
+          .eq('id', approvedItem.provider_id)
+          .maybeSingle();
+        if (pData) {
+          revealedName = revealedName || pData.revealed_name || '';
+          revealedUrl = revealedUrl || pData.revealed_url || '';
+        }
+      } catch (e) {
+        console.warn('Admin approval credentials lookup error:', e);
+      }
+    }
+  }
+
+  if (!revealedName && approvedItem?.provider_name && !approvedItem.provider_name.includes('(')) {
+    revealedName = approvedItem.provider_name;
+  }
+  if (!revealedName) {
+    revealedName = (approvedItem?.city && approvedItem?.country)
+      ? `${approvedItem.city} Host Access`
+      : 'Verified Host Access';
+  }
+  if (!revealedUrl) {
+    revealedUrl = 'https://iphm.network';
+  }
+
+  // 1. Update local state with unlocked credentials
   if (target) {
     target.status = 'approved';
+    target.provider_name = revealedName;
+    target.provider_url = revealedUrl;
     target.updated_at = new Date().toISOString();
   }
 
-  const localTarget = state.orders.find(o => o.id == id || o.order_ref === orderRef);
   if (localTarget) {
     localTarget.status = 'approved';
+    localTarget.provider_name = revealedName;
+    localTarget.provider_url = revealedUrl;
     localTarget.updated_at = new Date().toISOString();
   }
   localStorage.setItem('iphm_orders', JSON.stringify(state.orders));
 
-  // 2. Sync to Supabase
+  // 2. Sync to Supabase with credentials attached
   try {
-    let query = supabase.from('orders').update({
+    const updatePayload = {
       status: 'approved',
+      provider_name: revealedName,
+      provider_url: revealedUrl,
       updated_at: new Date().toISOString()
-    });
+    };
+    let query = supabase.from('orders').update(updatePayload);
     if (typeof id === 'string' && id.startsWith('ord-')) {
       query = query.eq('order_ref', orderRef);
     } else {
@@ -3555,13 +3805,14 @@ async function adminApproveOrder(id, orderRef) {
     console.warn('Supabase approve error:', err);
   }
 
-  // 3. Unlock provider credentials
-  const approvedItem = target || localTarget;
+  // 3. Unlock provider credentials in UI
   if (approvedItem) {
+    approvedItem.provider_name = revealedName;
+    approvedItem.provider_url = revealedUrl;
     unlockProviderFromOrder(approvedItem);
     const checkoutModal = document.getElementById('checkoutModal');
     if (checkoutModal?.classList.contains('active') && state.currentOrder?.ref === approvedItem.order_ref) {
-      showCheckoutStep3(approvedItem.provider_id);
+      showCheckoutStep3(approvedItem.provider_id, approvedItem);
     }
   }
 
@@ -3569,7 +3820,7 @@ async function adminApproveOrder(id, orderRef) {
   renderAdminOrdersList();
   renderOrdersList();
   updateOrdersBadges();
-  showToast('Order Approved!', `Order ${orderRef} approved! Host access permission granted.`, 'success');
+  showToast('Order Approved!', `Order ${orderRef} approved! Host access (${revealedName}) granted.`, 'success');
 }
 
 async function adminRejectOrder(id, orderRef) {
@@ -3803,19 +4054,51 @@ function handleRealtimeOrderEvent(payload) {
       const prevStatus = existing.status;
       existing.status = newRecord.status;
       existing.updated_at = newRecord.updated_at;
+      if (newRecord.provider_name && !newRecord.provider_name.includes('(')) {
+        existing.provider_name = newRecord.provider_name;
+      }
+      if (newRecord.provider_url && newRecord.provider_url !== 'null') {
+        existing.provider_url = newRecord.provider_url;
+      }
       localStorage.setItem('iphm_orders', JSON.stringify(state.orders));
 
       if (prevStatus !== 'approved' && newRecord.status === 'approved') {
-        unlockProviderFromOrder(newRecord);
-        showToast('Order Approved!', `Your Order ${newRecord.order_ref} was approved! Access credentials unlocked.`, 'success');
+        const finalizeApproval = () => {
+          unlockProviderFromOrder(existing);
+          showToast('Order Approved!', `Your Order ${newRecord.order_ref} was approved! Access credentials unlocked.`, 'success');
 
-        const checkoutModal = document.getElementById('checkoutModal');
-        if (checkoutModal?.classList.contains('active') && state.currentOrder?.ref === newRecord.order_ref) {
-          showCheckoutStep3(newRecord.provider_id);
+          const checkoutModal = document.getElementById('checkoutModal');
+          if (checkoutModal?.classList.contains('active') && state.currentOrder?.ref === newRecord.order_ref) {
+            showCheckoutStep3(newRecord.provider_id, existing);
+          }
+          renderOrdersList();
+          updateOrdersBadges();
+        };
+
+        if (!existing.provider_url || existing.provider_url === 'null') {
+          supabase
+            .from('providers')
+            .select('revealed_name, revealed_url')
+            .eq('id', existing.provider_id)
+            .maybeSingle()
+            .then(({ data: p }) => {
+              if (p) {
+                if (p.revealed_name) existing.provider_name = p.revealed_name;
+                if (p.revealed_url) existing.provider_url = p.revealed_url;
+                localStorage.setItem('iphm_orders', JSON.stringify(state.orders));
+              }
+              finalizeApproval();
+            })
+            .catch(() => {
+              finalizeApproval();
+            });
+        } else {
+          finalizeApproval();
         }
+      } else {
+        renderOrdersList();
+        updateOrdersBadges();
       }
-      renderOrdersList();
-      updateOrdersBadges();
     }
 
     if (state.isAdmin || document.getElementById('adminPage')) {
@@ -3823,6 +4106,8 @@ function handleRealtimeOrderEvent(payload) {
       if (adminTarget) {
         adminTarget.status = newRecord.status;
         adminTarget.updated_at = newRecord.updated_at;
+        if (newRecord.provider_name) adminTarget.provider_name = newRecord.provider_name;
+        if (newRecord.provider_url) adminTarget.provider_url = newRecord.provider_url;
         updateAdminStats();
         renderAdminOrdersList();
       }
