@@ -1,7 +1,2 @@
-/orders        /orders.html    200
-/orders/       /orders.html    200
-/profile       /profile.html   200
-/profile/      /profile.html   200
-/admin         /admin.html     200
-/admin/        /admin.html     200
-/*             /index.html     200
+# Static routes are served directly from the generated HTML files.
+# Keep this file empty to avoid redirect loops during Cloudflare deploys.
