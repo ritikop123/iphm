@@ -222,7 +222,9 @@ create policy "Anyone can read providers" on public.providers
 -- Only verified admins can insert/update/delete providers
 drop policy if exists "Admins can manage providers" on public.providers;
 create policy "Admins can manage providers" on public.providers
-  for all using (public.is_admin());
+  for all 
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- Realtime (Idempotent)
 do $$
@@ -237,11 +239,10 @@ begin
   end if;
 end $$;
 
--- Column-Level Protection:
--- Restrict column SELECT so anon and regular users can NEVER query sensitive columns over the wire
-revoke select on public.providers from anon, authenticated;
-grant select (id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden, created_at, updated_at) 
-on public.providers to anon, authenticated;
+-- Table Grants: Allow authenticated and anon to read/write through RLS
+grant all on public.providers to authenticated;
+grant select on public.providers to anon;
+grant usage, select on all sequences in schema public to authenticated;
 
 -- Repair any rows that were created without the required public metadata
 alter table public.providers

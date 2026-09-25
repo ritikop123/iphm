@@ -172,44 +172,19 @@ function loadInitialUnlocked() {
   return [];
 }
 
-function purgeStaleProviderCache() {
-  try {
-    const stored = localStorage.getItem('iphm_providers');
-    if (!stored) return;
-
-    const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed)) {
-      localStorage.removeItem('iphm_providers');
-      return;
-    }
-
-    const hasLegacyDemoCatalog = parsed.some(provider => {
-      const city = String(provider.city || '').trim();
-      const country = String(provider.country || '').trim();
-      return (
-        city === 'Amsterdam' ||
-        city === 'Frankfurt' ||
-        city === 'Zurich' ||
-        city === 'Reykjavik' ||
-        country === 'Netherland' ||
-        country === 'Germany' ||
-        country === 'Switzerland' ||
-        country === 'Iceland'
-      );
-    });
-
-    if (hasLegacyDemoCatalog) {
-      localStorage.removeItem('iphm_providers');
-    }
-  } catch (e) {
-    localStorage.removeItem('iphm_providers');
-  }
-}
-
 function loadInitialProviders() {
-  // Start from an empty catalog so cards are created by the database/admin flow.
-  purgeStaleProviderCache();
-  localStorage.removeItem('iphm_providers');
+  try {
+    const adminStored = localStorage.getItem('iphm_admin_providers');
+    if (adminStored) {
+      const parsed = JSON.parse(adminStored);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    const stored = localStorage.getItem('iphm_providers');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
   return [];
 }
 
@@ -257,19 +232,42 @@ function getVisibleProviders() {
 }
 
 function saveProvidersLocally() {
-  // Never persist raw secret credentials into public localStorage
-  const cleanProviders = state.providers.map(p => {
-    const copy = { ...p };
-    delete copy.revealedName;
-    delete copy.revealedUrl;
-    return copy;
-  });
-  localStorage.setItem('iphm_providers', JSON.stringify(cleanProviders));
+  try {
+    // 1. Persist full provider card details for admin management
+    localStorage.setItem('iphm_admin_providers', JSON.stringify(state.providers));
+
+    // 2. Persist clean public version for customer views
+    const cleanProviders = state.providers.map(p => {
+      const copy = { ...p };
+      delete copy.revealedName;
+      delete copy.revealedUrl;
+      return copy;
+    });
+    localStorage.setItem('iphm_providers', JSON.stringify(cleanProviders));
+  } catch (e) {
+    console.warn('saveProvidersLocally warning:', e);
+  }
+}
+
+function restoreAdminSecretsToState() {
+  try {
+    const adminStored = localStorage.getItem('iphm_admin_providers');
+    if (!adminStored) return;
+    const adminList = JSON.parse(adminStored);
+    if (!Array.isArray(adminList)) return;
+    adminList.forEach(saved => {
+      const live = state.providers.find(p => String(p.id) === String(saved.id));
+      if (live) {
+        if (!live.revealedName && saved.revealedName) live.revealedName = saved.revealedName;
+        if (!live.revealedUrl && saved.revealedUrl) live.revealedUrl = saved.revealedUrl;
+      }
+    });
+  } catch (e) {}
 }
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-  purgeStaleProviderCache();
+  restoreAdminSecretsToState();
   initUI();
   initFAQ();
   initAuth();
@@ -2248,7 +2246,7 @@ function openOrdersModal() {
     document.body.style.overflow = 'hidden';
     renderOrdersList();
   } else {
-    window.location.href = 'orders.html';
+    window.location.href = '/orders.html';
   }
 }
 
@@ -2921,23 +2919,46 @@ async function saveProviderCard(e) {
       existing.isHidden = !isVisible;
     }
 
+    saveProvidersLocally();
+    closeProviderModal();
+    renderAdminProvidersList();
+    updateAdminProviderCounts();
+    renderProviders();
+    updateStats();
+
+    // Sync to Supabase
     try {
-      if (!String(formId).startsWith('loc-')) {
-        await supabase.from('providers').update({
-          city, country, country_code: countryCode, type, pps, pps_num: ppsNum,
-          nic, spoofing, updated_ago: 'Just now', price_usd: priceUsd,
-          revealed_name: revealedName, revealed_url: revealedUrl, is_hidden: !isVisible,
-          updated_at: new Date().toISOString()
-        }).eq('id', formId);
+      const updatePayload = {
+        city, country, country_code: countryCode, type, pps, pps_num: ppsNum,
+        nic, spoofing, updated_ago: 'Just now', price_usd: priceUsd,
+        is_hidden: !isVisible,
+        updated_at: new Date().toISOString()
+      };
+      if (revealedName) updatePayload.revealed_name = revealedName;
+      if (revealedUrl) updatePayload.revealed_url = revealedUrl;
+
+      const numId = parseInt(formId, 10);
+      const queryId = !isNaN(numId) && numId < 2147483647 ? numId : formId;
+
+      const { error } = await supabase.from('providers').update(updatePayload).eq('id', queryId);
+      if (error) {
+        console.warn('Supabase update provider notice:', error);
+        showToast('Card Updated Locally', `Host for ${city}, ${country} is active on website. (Database sync note: ${error.message})`, 'info');
+      } else {
+        showToast('Card Updated', `Host listing for ${city}, ${country} was updated across website and database.`, 'success');
       }
     } catch (err) {
       console.warn('Supabase update provider:', err);
+      showToast('Card Updated Locally', `Host listing for ${city}, ${country} is live on website.`, 'success');
     }
-
-    showToast('Card Updated', `Host listing for ${city}, ${country} was updated.`, 'success');
   } else {
-    // Add new provider
-    const newId = Date.now();
+    // Add new provider — allocate safe integer ID
+    const maxExisting = state.providers.reduce((max, p) => {
+      const n = Number(p.id);
+      return (!isNaN(n) && n < 10000000) ? Math.max(max, n) : max;
+    }, 0);
+    const newId = maxExisting + 1;
+
     const newProvider = {
       id: newId,
       city,
@@ -2951,41 +2972,47 @@ async function saveProviderCard(e) {
       updatedAgo: 'Just now',
       priceUsd,
       priceLtc: liveLtc,
-      revealedName,
-      revealedUrl,
+      revealedName: revealedName || 'Verified Host Gateway',
+      revealedUrl: revealedUrl || 'https://iphm.network',
       isHidden: !isVisible
     };
 
     state.providers.unshift(newProvider);
+    saveProvidersLocally();
+    closeProviderModal();
+    renderAdminProvidersList();
+    updateAdminProviderCounts();
+    renderProviders();
+    updateStats();
 
+    // Sync to Supabase
     try {
-      const safeRevealedName = revealedName || 'Verified Host Gateway';
-      const safeRevealedUrl = revealedUrl || 'https://iphm.network';
-
-      const { data } = await supabase.from('providers').insert([{
+      const insertPayload = {
         city, country, country_code: countryCode, type, pps, pps_num: ppsNum,
         nic, spoofing, updated_ago: 'Just now', price_usd: priceUsd,
-        revealed_name: safeRevealedName,
-        revealed_url: safeRevealedUrl,
+        revealed_name: revealedName || 'Verified Host Gateway',
+        revealed_url: revealedUrl || 'https://iphm.network',
         is_hidden: !isVisible
-      }]).select();
-      if (data?.[0]?.id) {
+      };
+
+      const { data, error } = await supabase.from('providers').insert([insertPayload]).select();
+      if (error) {
+        console.warn('Supabase insert provider notice:', error);
+        showToast('Provider Active Locally!', `Host card for ${city}, ${country} is live on website! (Database sync note: ${error.message})`, 'info');
+      } else if (data?.[0]?.id) {
         newProvider.id = data[0].id;
+        saveProvidersLocally();
+        renderAdminProvidersList();
+        renderProviders();
+        showToast('Provider Published!', `New host card for ${city}, ${country} is now live across the website!`, 'success');
+      } else {
+        showToast('Provider Created!', `New host card for ${city}, ${country} is now live!`, 'success');
       }
     } catch (err) {
       console.warn('Supabase insert provider:', err);
+      showToast('Provider Created!', `New host card for ${city}, ${country} is now live!`, 'success');
     }
-
-    showToast('Provider Created!', `New host card for ${city}, ${country} is now live!`, 'success');
   }
-
-  saveProvidersLocally();
-  closeProviderModal();
-  await syncProvidersFromSupabase();
-  renderAdminProvidersList();
-  updateAdminProviderCounts();
-  renderProviders();
-  updateStats();
 }
 
 async function toggleProviderVisibility(id) {
@@ -2994,23 +3021,21 @@ async function toggleProviderVisibility(id) {
 
   provider.isHidden = !provider.isHidden;
   saveProvidersLocally();
-
-  try {
-    if (!String(id).startsWith('loc-')) {
-      await supabase.from('providers').update({
-        is_hidden: provider.isHidden,
-        updated_at: new Date().toISOString()
-      }).eq('id', id);
-    }
-  } catch (err) {
-    console.warn('Supabase toggle visibility:', err);
-  }
-
-  await syncProvidersFromSupabase();
   renderAdminProvidersList();
   updateAdminProviderCounts();
   renderProviders();
   updateStats();
+
+  try {
+    const numId = parseInt(id, 10);
+    const queryId = !isNaN(numId) && numId < 2147483647 ? numId : id;
+    await supabase.from('providers').update({
+      is_hidden: provider.isHidden,
+      updated_at: new Date().toISOString()
+    }).eq('id', queryId);
+  } catch (err) {
+    console.warn('Supabase toggle visibility:', err);
+  }
 
   showToast(
     provider.isHidden ? 'Host Card Hidden' : 'Host Card Visible',
@@ -3028,20 +3053,18 @@ async function deleteProvider(id) {
 
   state.providers = state.providers.filter(p => String(p.id) !== String(id));
   saveProvidersLocally();
-
-  try {
-    if (!String(id).startsWith('loc-')) {
-      await supabase.from('providers').delete().eq('id', id);
-    }
-  } catch (err) {
-    console.warn('Supabase delete provider:', err);
-  }
-
-  await syncProvidersFromSupabase();
   renderAdminProvidersList();
   updateAdminProviderCounts();
   renderProviders();
   updateStats();
+
+  try {
+    const numId = parseInt(id, 10);
+    const queryId = !isNaN(numId) && numId < 2147483647 ? numId : id;
+    await supabase.from('providers').delete().eq('id', queryId);
+  } catch (err) {
+    console.warn('Supabase delete provider:', err);
+  }
 
   showToast('Provider Deleted', `Listing "${provider.city}, ${provider.country}" was removed.`, 'warn');
 }
@@ -3189,21 +3212,30 @@ function updateAdminProviderCounts() {
 // --------------------------------------------------------------------
 async function syncProvidersFromSupabase() {
   try {
-    // Only query safe public catalog columns over the wire for customer views
-    const isEditingAdmin = (state.isAdmin || document.getElementById('adminPage'));
-    const selectCols = isEditingAdmin 
-      ? '*' 
-      : 'id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden';
+    const isEditingAdmin = Boolean(state.isAdmin || document.getElementById('adminPage'));
+    const adminCols = 'id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden, revealed_name, revealed_url';
+    const publicCols = 'id, city, country, country_code, type, pps, pps_num, nic, spoofing, updated_ago, price_usd, price_ltc, is_hidden';
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('providers')
-      .select(selectCols)
+      .select(isEditingAdmin ? adminCols : publicCols)
       .order('id', { ascending: true });
 
+    if (error && isEditingAdmin) {
+      const fallback = await supabase
+        .from('providers')
+        .select(publicCols)
+        .order('id', { ascending: true });
+      if (!fallback.error) {
+        data = fallback.data;
+        error = null;
+      }
+    }
+
     if (error) {
-      console.warn('Supabase providers sync:', error);
-      state.providers = [];
-      saveProvidersLocally();
+      console.warn('Supabase providers sync error:', error);
+      // Resilient: keep local provider cards intact so website is not wiped!
+      restoreAdminSecretsToState();
       renderProviders();
       if (document.getElementById('adminProvidersContent')) {
         renderAdminProvidersList();
@@ -3213,44 +3245,41 @@ async function syncProvidersFromSupabase() {
       return;
     }
 
-    state.providers = Array.isArray(data)
-      ? data.map(d => ({
-          id: d.id,
-          city: d.city,
-          country: d.country,
-          countryCode: d.country_code || 'us',
-          type: d.type,
-          pps: d.pps,
-          ppsNum: d.pps_num || 150000,
-          nic: d.nic,
-          spoofing: d.spoofing || 'Working',
-          updatedAgo: d.updated_ago || 'Just now',
-          priceUsd: Number(d.price_usd) || 45,
-          priceLtc: d.price_ltc || '0.50',
-          revealedName: d.revealed_name || undefined,
-          revealedUrl: d.revealed_url || undefined,
-          isHidden: Boolean(d.is_hidden)
-        }))
-      : [];
+    if (Array.isArray(data) && data.length > 0) {
+      const remote = data.map(d => ({
+        id: d.id,
+        city: d.city,
+        country: d.country,
+        countryCode: d.country_code || 'us',
+        type: d.type,
+        pps: d.pps,
+        ppsNum: d.pps_num || 150000,
+        nic: d.nic,
+        spoofing: d.spoofing || 'Working',
+        updatedAgo: d.updated_ago || 'Just now',
+        priceUsd: Number(d.price_usd) || 45,
+        priceLtc: d.price_ltc || (Number(d.price_usd) / (ratesState.LTC || 73.95)).toFixed(2),
+        revealedName: d.revealed_name || undefined,
+        revealedUrl: d.revealed_url || undefined,
+        isHidden: Boolean(d.is_hidden)
+      }));
 
-    saveProvidersLocally();
-    renderProviders();
-    if (document.getElementById('adminProvidersContent')) {
-      renderAdminProvidersList();
-      updateAdminProviderCounts();
+      // Preserve any locally added providers not yet synced
+      const unsyncedLocals = state.providers.filter(p => !remote.some(r => String(r.id) === String(p.id)));
+      state.providers = [...remote, ...unsyncedLocals];
+      restoreAdminSecretsToState();
+      saveProvidersLocally();
     }
-    updateStats();
   } catch (err) {
-    console.warn('Supabase providers sync:', err);
-    state.providers = [];
-    saveProvidersLocally();
-    renderProviders();
-    if (document.getElementById('adminProvidersContent')) {
-      renderAdminProvidersList();
-      updateAdminProviderCounts();
-    }
-    updateStats();
+    console.warn('Supabase providers sync exception:', err);
   }
+
+  renderProviders();
+  if (document.getElementById('adminProvidersContent')) {
+    renderAdminProvidersList();
+    updateAdminProviderCounts();
+  }
+  updateStats();
 }
 
 function setupRealtimeProviders() {
@@ -3267,7 +3296,7 @@ function setupRealtimeProviders() {
 }
 
 function openAdminModal() {
-  window.location.href = 'admin.html';
+  window.location.href = '/admin.html';
 }
 
 function closeAdminModal() {
