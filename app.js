@@ -3660,13 +3660,20 @@ async function checkAdminStatus() {
   if (isAdminPage) showAdminGateDenied();
 }
 
-function showAdminDashboard() {
+async function showAdminDashboard() {
   const gate = document.getElementById('adminAuthGate');
   const page = document.getElementById('adminPage');
   const adminBtn = document.getElementById('openAdminBtn');
   if (gate) gate.style.display = 'none';
   if (page) page.style.display = 'block';
   if (adminBtn) { adminBtn.style.display = 'inline-flex'; adminBtn.classList.add('active'); }
+
+  try {
+    await syncProvidersFromSupabase();
+  } catch (e) {
+    console.warn('Admin provider refresh failed:', e);
+  }
+
   fetchAdminOrders();
   renderAdminProvidersList?.();
   updateAdminProviderCounts?.();
