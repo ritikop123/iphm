@@ -2940,6 +2940,7 @@ async function saveProviderCard(e) {
 
   saveProvidersLocally();
   closeProviderModal();
+  await syncProvidersFromSupabase();
   renderAdminProvidersList();
   updateAdminProviderCounts();
   renderProviders();
@@ -2964,6 +2965,7 @@ async function toggleProviderVisibility(id) {
     console.warn('Supabase toggle visibility:', err);
   }
 
+  await syncProvidersFromSupabase();
   renderAdminProvidersList();
   updateAdminProviderCounts();
   renderProviders();
@@ -2994,6 +2996,7 @@ async function deleteProvider(id) {
     console.warn('Supabase delete provider:', err);
   }
 
+  await syncProvidersFromSupabase();
   renderAdminProvidersList();
   updateAdminProviderCounts();
   renderProviders();
