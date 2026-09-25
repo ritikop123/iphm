@@ -669,7 +669,7 @@ function renderHeaderAuth() {
         const mobileToggleBtn = document.getElementById('mobileToggleBtn');
         if (mobileNavDrawer) mobileNavDrawer.classList.remove('open');
         if (mobileToggleBtn) { mobileToggleBtn.classList.remove('open'); mobileToggleBtn.setAttribute('aria-expanded', 'false'); }
-        window.location.href = 'profile.html';
+        window.location.href = '/profile.html';
       });
     }
 
@@ -759,19 +759,19 @@ function renderHeaderAuth() {
     document.getElementById('openProfileFromMenu')?.addEventListener('click', () => {
       document.getElementById('userMenuDropdown')?.classList.remove('open');
       document.querySelector('.user-menu-container')?.classList.remove('open');
-      window.location.href = 'profile.html';
+      window.location.href = '/profile.html';
     });
 
     document.getElementById('openOrdersFromMenu')?.addEventListener('click', () => {
       document.getElementById('userMenuDropdown')?.classList.remove('open');
       document.querySelector('.user-menu-container')?.classList.remove('open');
-      window.location.href = 'orders.html';
+      window.location.href = '/orders.html';
     });
 
     document.getElementById('openAdminFromMenu')?.addEventListener('click', () => {
       document.getElementById('userMenuDropdown')?.classList.remove('open');
       document.querySelector('.user-menu-container')?.classList.remove('open');
-      window.location.href = 'admin.html';
+      window.location.href = '/admin.html';
     });
 
     document.getElementById('openDashboardFromMenu')?.addEventListener('click', () => {
@@ -1977,7 +1977,7 @@ function initCheckout() {
   if (openOrdersFromCheckoutBtn) {
     openOrdersFromCheckoutBtn.addEventListener('click', () => {
       closeCheckoutModal();
-      window.location.href = 'orders.html';
+      window.location.href = '/orders.html';
     });
   }
 
