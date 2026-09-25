@@ -3195,24 +3195,9 @@ async function syncProvidersFromSupabase() {
       .select(selectCols)
       .order('id', { ascending: true });
 
-    if (!error && Array.isArray(data) && data.length > 0) {
-      state.providers = data.map(d => ({
-        id: d.id,
-        city: d.city,
-        country: d.country,
-        countryCode: d.country_code || 'us',
-        type: d.type,
-        pps: d.pps,
-        ppsNum: d.pps_num || 150000,
-        nic: d.nic,
-        spoofing: d.spoofing || 'Working',
-        updatedAgo: d.updated_ago || 'Just now',
-        priceUsd: Number(d.price_usd) || 45,
-        priceLtc: d.price_ltc || '0.50',
-        revealedName: d.revealed_name || undefined,
-        revealedUrl: d.revealed_url || undefined,
-        isHidden: Boolean(d.is_hidden)
-      }));
+    if (error) {
+      console.warn('Supabase providers sync:', error);
+      state.providers = [];
       saveProvidersLocally();
       renderProviders();
       if (document.getElementById('adminProvidersContent')) {
@@ -3220,9 +3205,46 @@ async function syncProvidersFromSupabase() {
         updateAdminProviderCounts();
       }
       updateStats();
+      return;
     }
+
+    state.providers = Array.isArray(data)
+      ? data.map(d => ({
+          id: d.id,
+          city: d.city,
+          country: d.country,
+          countryCode: d.country_code || 'us',
+          type: d.type,
+          pps: d.pps,
+          ppsNum: d.pps_num || 150000,
+          nic: d.nic,
+          spoofing: d.spoofing || 'Working',
+          updatedAgo: d.updated_ago || 'Just now',
+          priceUsd: Number(d.price_usd) || 45,
+          priceLtc: d.price_ltc || '0.50',
+          revealedName: d.revealed_name || undefined,
+          revealedUrl: d.revealed_url || undefined,
+          isHidden: Boolean(d.is_hidden)
+        }))
+      : [];
+
+    saveProvidersLocally();
+    renderProviders();
+    if (document.getElementById('adminProvidersContent')) {
+      renderAdminProvidersList();
+      updateAdminProviderCounts();
+    }
+    updateStats();
   } catch (err) {
     console.warn('Supabase providers sync:', err);
+    state.providers = [];
+    saveProvidersLocally();
+    renderProviders();
+    if (document.getElementById('adminProvidersContent')) {
+      renderAdminProvidersList();
+      updateAdminProviderCounts();
+    }
+    updateStats();
   }
 }
 

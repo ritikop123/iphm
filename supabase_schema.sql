@@ -34,10 +34,19 @@ alter table public.profiles enable row level security;
 -- --------------------------------------------------------------------
 create or replace function public.is_admin()
 returns boolean as $$
+declare
+  current_email text;
 begin
+  current_email := lower(coalesce(auth.jwt() ->> 'email', ''));
+
   return exists (
-    select 1 from public.profiles
-    where id = auth.uid() and role = 'admin'
+    select 1
+    from public.profiles p
+    where p.role = 'admin'
+      and (
+        p.id = auth.uid()
+        or lower(coalesce(p.email, '')) = current_email
+      )
   );
 end;
 $$ language plpgsql security definer;
