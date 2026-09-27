@@ -412,10 +412,6 @@ function renderProviders() {
               <span class="text-accent" style="font-weight: 600;">${provider.spoofing}</span>
             </dd>
           </div>
-          <div class="spec-item">
-            <dt>Audit</dt>
-            <dd class="text-muted" style="font-size: 0.78rem;">${provider.updatedAgo || 'Just now'}</dd>
-          </div>
         </dl>
 
         <div class="card-footer">
@@ -2981,7 +2977,6 @@ function updateLiveCardPreview() {
         <div class="spec-item"><dt>Highest PPS</dt><dd class="mono">${pps}</dd></div>
         <div class="spec-item"><dt>NIC speed</dt><dd class="mono">${nic}</dd></div>
         <div class="spec-item"><dt>Spoofing</dt><dd class="text-accent font-semibold">${spoofing}</dd></div>
-        <div class="spec-item"><dt>Audit</dt><dd class="text-muted">Just now</dd></div>
       </dl>
       <div class="card-footer">
         <div>
