@@ -78,9 +78,9 @@ body::before {
   inset: 0;
   z-index: 0;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    radial-gradient(ellipse 90% 70% at 50% 20%, rgba(6, 8, 12, 0.35) 0%, rgba(6, 8, 12, 0.72) 65%, var(--color-base) 100%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    radial-gradient(ellipse 100% 80% at 50% 25%, rgba(6, 8, 12, 0.1) 0%, rgba(6, 8, 12, 0.42) 65%, rgba(6, 8, 12, 0.75) 100%),
     url('/8dcc4f8f-8651-4b5e-ba27-194a6f349274.png');
   background-size: 40px 40px, 40px 40px, 100% 100%, cover;
   background-position: center top;
