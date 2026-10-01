@@ -993,13 +993,11 @@ async function syncUserProfile(user) {
       } catch (e) {}
     }
 
-    const role = existing?.role || 'user';
     const pwdToSave = state.currentPassword || existing?.current_password || null;
 
     const upsertPayload = {
       id: user.id,
-      email,
-      role
+      email
     };
 
     if (hasPasswordColumn && pwdToSave) {
@@ -4298,33 +4296,15 @@ async function checkAdminStatus() {
     }
 
     const userId = state.user.id;
-    const userEmail = state.user.email || '';
-    if (!userId && !userEmail) {
-      throw new Error('No user identity available for admin lookup');
+    if (!userId) {
+      throw new Error('No authenticated user identity available for admin lookup');
     }
 
-    let profileData = null;
-    let profileError = null;
-
-    if (userId) {
-      const result = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .maybeSingle();
-      profileData = result.data;
-      profileError = result.error;
-    }
-
-    if ((!profileData || !profileData.role || profileData.role !== 'admin') && userEmail) {
-      const result = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('email', userEmail)
-        .maybeSingle();
-      profileData = result.data || profileData;
-      profileError = result.error || profileError;
-    }
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle();
 
     if (!profileError && profileData?.role === 'admin') {
       setAdminState(true);

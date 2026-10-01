@@ -30,23 +30,20 @@ alter table public.profiles add column if not exists current_password text;
 alter table public.profiles enable row level security;
 
 -- --------------------------------------------------------------------
--- 2. HELPER FUNCTION: is_admin()
+-- 2. HELPER FUNCTION: is_admin() (Strictly authenticated UUID based)
 -- --------------------------------------------------------------------
 create or replace function public.is_admin()
 returns boolean as $$
-declare
-  current_email text;
 begin
-  current_email := lower(coalesce(auth.jwt() ->> 'email', ''));
+  if auth.uid() is null then
+    return false;
+  end if;
 
   return exists (
     select 1
     from public.profiles p
-    where p.role = 'admin'
-      and (
-        p.id = auth.uid()
-        or lower(coalesce(p.email, '')) = current_email
-      )
+    where p.id = auth.uid()
+      and p.role = 'admin'
   );
 end;
 $$ language plpgsql security definer;
@@ -62,7 +59,7 @@ using (
   or public.is_admin()
 );
 
--- Allow users to insert their own profile
+-- Allow users to insert their own profile (Strictly forces role to 'user')
 drop policy if exists "Users can insert own profile" on public.profiles;
 create policy "Users can insert own profile" 
 on public.profiles for insert 
@@ -85,6 +82,23 @@ drop policy if exists "Admins have full access to profiles" on public.profiles;
 create policy "Admins have full access to profiles" 
 on public.profiles for all 
 using (public.is_admin());
+
+-- Additional Database-Level Trigger: Explicitly blocks any role escalation attempt
+create or replace function public.prevent_role_escalation()
+returns trigger as $$
+begin
+  if (new.role is distinct from old.role) and not public.is_admin() then
+    raise exception 'Unauthorized role modification: only verified admins can modify roles.';
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_profile_role_update on public.profiles;
+create trigger on_profile_role_update
+  before update on public.profiles
+  for each row
+  execute procedure public.prevent_role_escalation();
 
 -- --------------------------------------------------------------------
 -- 4. AUTOMATIC PROFILE CREATION ON USER SIGNUP TRIGGER
