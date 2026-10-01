@@ -3102,6 +3102,70 @@ function initAdminModal() {
     });
   }
 
+  const purgeSpamOrdersBtn = document.getElementById('purgeSpamOrdersBtn');
+  if (purgeSpamOrdersBtn) {
+    purgeSpamOrdersBtn.addEventListener('click', async () => {
+      const pendingOrders = (state.adminOrders || []).filter(o => o.status === 'pending');
+      const count = pendingOrders.length;
+      if (count === 0) {
+        showToast('Clean Queue', 'There are no pending spam orders to purge.', 'info');
+        return;
+      }
+
+      const confirmed = window.confirm(
+        `Are you sure you want to purge all ${count} pending spam orders from the bot attack?\n\nThis will remove them from the database and reset your pending queue.`
+      );
+      if (!confirmed) return;
+
+      purgeSpamOrdersBtn.disabled = true;
+      purgeSpamOrdersBtn.textContent = 'Purging...';
+
+      try {
+        // 1. Try deleting from Supabase orders table
+        const { error } = await supabase
+          .from('orders')
+          .delete()
+          .eq('status', 'pending');
+
+        if (error) {
+          console.warn('Supabase delete pending warning, attempting bulk cancel:', error.message || error);
+          await supabase
+            .from('orders')
+            .update({ status: 'cancelled' })
+            .eq('status', 'pending');
+        }
+
+        // 2. Filter out pending orders from application state
+        state.adminOrders = (state.adminOrders || []).filter(o => o.status !== 'pending');
+        state.orders = (state.orders || []).filter(o => o.status !== 'pending');
+
+        // 3. Clear from local storage
+        try {
+          const localOrders = JSON.parse(localStorage.getItem('iphm_orders') || '[]');
+          const cleanedLocal = localOrders.filter(o => o.status !== 'pending');
+          localStorage.setItem('iphm_orders', JSON.stringify(cleanedLocal));
+        } catch (e) {}
+
+        // 4. Update UI & statistics
+        updateAdminStats();
+        renderAdminOrdersList();
+        renderOrdersList();
+        updateOrdersBadges();
+
+        showToast('Bot Spam Purged!', `Successfully cleaned ${count} fake pending orders.`, 'success');
+      } catch (err) {
+        console.error('Error purging spam orders:', err);
+        showToast('Purge Failed', err.message || 'Could not purge orders', 'warn');
+      } finally {
+        purgeSpamOrdersBtn.disabled = false;
+        purgeSpamOrdersBtn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Purge Spam Orders
+        `;
+      }
+    });
+  }
+
   if (adminSearchInput) {
     adminSearchInput.addEventListener('input', (e) => {
       state.adminSearchQuery = e.target.value.trim();

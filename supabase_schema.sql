@@ -173,6 +173,12 @@ create policy "Admins can update orders"
 on public.orders for update 
 using (public.is_admin());
 
+-- ONLY verified admins can delete orders (e.g. purge bot spam)
+drop policy if exists "Admins can delete orders" on public.orders;
+create policy "Admins can delete orders" 
+on public.orders for delete 
+using (public.is_admin());
+
 -- --------------------------------------------------------------------
 -- 6.1 AUTOMATIC PROVIDER CREDENTIALS REVELATION ON APPROVAL TRIGGER
 -- --------------------------------------------------------------------
