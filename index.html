@@ -741,11 +741,67 @@
         </div>
 
         <form id="txidForm" style="margin-top: 1.25rem;">
+          <!-- Honeypot anti-bot trap: invisible to genuine human users, automatically filled by automated bot scrapers -->
+          <div style="position: absolute; left: -9999px; top: -9999px; opacity: 0; pointer-events: none; width: 0; height: 0; overflow: hidden;" aria-hidden="true">
+            <label for="order_hp_token">Security Token - Leave Empty</label>
+            <input type="text" id="order_hp_token" name="order_hp_token" tabindex="-1" autocomplete="off" />
+          </div>
+
           <label class="label" for="txidInput" id="txidInputLabel">Paste your transaction ID after you send</label>
           <input id="txidInput" type="text" class="field font-mono" style="font-size: 0.75rem;" placeholder="64-character TXID from your wallet" spellcheck="false" autocomplete="off" required />
           <div id="txidErrorBanner" class="error-banner" style="display: none;"></div>
-          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="submitTxidBtn">
-            I sent it — check my payment
+
+          <!-- Built-in Anti-Bot Security Verification Widget -->
+          <div class="order-captcha-box" id="orderCaptchaBox">
+            <div class="captcha-main-row">
+              <label class="captcha-checkbox-wrap" id="captchaCheckboxLabel" title="Click to verify you are human">
+                <input type="checkbox" id="orderCaptchaCheck" class="captcha-checkbox-input" />
+                <span class="captcha-custom-check" id="captchaCustomCheck">
+                  <span class="captcha-spinner" id="captchaSpinner"></span>
+                  <svg class="captcha-check-icon" id="captchaCheckIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                <span class="captcha-label-text" id="captchaStatusText">Verify you are human</span>
+              </label>
+
+              <div class="captcha-brand">
+                <div class="captcha-brand-badge">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-accent">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  <span>IPHM Shield</span>
+                </div>
+                <div class="captcha-brand-meta">Anti-Bot &amp; DDoS Guard</div>
+              </div>
+            </div>
+
+            <!-- Interactive Security Challenge Drawer -->
+            <div class="captcha-challenge-drawer" id="captchaChallengeDrawer" style="display: none;">
+              <div class="captcha-challenge-header">
+                <span class="captcha-challenge-title">Security Challenge</span>
+                <span class="captcha-challenge-hint">Type the 4 characters shown:</span>
+              </div>
+              <div class="captcha-canvas-row">
+                <div class="captcha-canvas-wrap">
+                  <canvas id="captchaCanvas" width="150" height="42" class="captcha-canvas"></canvas>
+                  <button type="button" class="captcha-refresh-btn" id="captchaRefreshBtn" title="Generate new code">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                  </button>
+                </div>
+                <input type="text" id="captchaCodeInput" class="field font-mono captcha-code-input" maxlength="4" placeholder="Code" autocomplete="off" spellcheck="false" />
+                <button type="button" class="btn btn-primary btn-sm captcha-verify-btn" id="captchaVerifyBtn">
+                  Verify
+                </button>
+              </div>
+              <div class="captcha-challenge-error" id="captchaChallengeError" style="display: none;"></div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-locked" style="width: 100%; margin-top: 1rem;" id="submitTxidBtn" disabled>
+            <span id="submitBtnLockIcon">🔒 </span><span id="submitBtnText">Complete Verification to Submit</span>
           </button>
         </form>
 

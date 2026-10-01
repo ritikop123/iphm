@@ -443,9 +443,17 @@ function renderProviders() {
   attachCardEvents();
 }
 
+let lastBuyClickTime = 0;
 function attachCardEvents() {
   document.querySelectorAll('.buy-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      // Anti-bot click flood protection
+      const now = Date.now();
+      if (now - lastBuyClickTime < 400) {
+        return;
+      }
+      lastBuyClickTime = now;
+
       const providerId = btn.getAttribute('data-id');
       const provider = state.providers.find(p => String(p.id) === String(providerId)) || state.providers[0];
 
@@ -1882,6 +1890,275 @@ function updateRateDisplays() {
   }
 }
 
+// ============================================================================
+// ANTI-BOT SECURITY CAPTCHA SYSTEM (Protects Order Submissions)
+// ============================================================================
+const orderCaptchaState = {
+  isVerified: false,
+  token: null,
+  tokenExpiry: 0,
+  openedAt: 0,
+  currentCode: '',
+  interactionEntropy: 0,
+  isSolving: false
+};
+
+const CAPTCHA_CHARS = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+function generateCaptchaCode(length = 4) {
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += CAPTCHA_CHARS.charAt(Math.floor(Math.random() * CAPTCHA_CHARS.length));
+  }
+  return code;
+}
+
+function renderCaptchaCanvas(code) {
+  const canvas = document.getElementById('captchaCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const width = canvas.width;
+  const height = canvas.height;
+
+  // Background gradient
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, '#090e17');
+  gradient.addColorStop(0.5, '#0e1726');
+  gradient.addColorStop(1, '#0b111c');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  // Background noise dots
+  for (let i = 0; i < 35; i++) {
+    ctx.fillStyle = `rgba(${120 + Math.random() * 135}, ${120 + Math.random() * 135}, ${120 + Math.random() * 135}, ${0.15 + Math.random() * 0.25})`;
+    ctx.beginPath();
+    ctx.arc(Math.random() * width, Math.random() * height, Math.random() * 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Interference curves
+  for (let i = 0; i < 3; i++) {
+    ctx.strokeStyle = i % 2 === 0 ? 'rgba(74, 222, 128, 0.45)' : 'rgba(96, 165, 250, 0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(Math.random() * 20, Math.random() * height);
+    ctx.bezierCurveTo(
+      Math.random() * width, Math.random() * height,
+      Math.random() * width, Math.random() * height,
+      width - Math.random() * 20, Math.random() * height
+    );
+    ctx.stroke();
+  }
+
+  // Draw distorted characters
+  const charSpacing = (width - 32) / code.length;
+  const colors = ['#4ade80', '#60a5fa', '#fbbf24', '#f0f4fa', '#a78bfa'];
+
+  ctx.textBaseline = 'middle';
+
+  for (let i = 0; i < code.length; i++) {
+    const char = code[i];
+    const x = 14 + i * charSpacing + (Math.random() * 4 - 2);
+    const y = height / 2 + (Math.random() * 4 - 2);
+    const angle = (Math.random() * 26 - 13) * (Math.PI / 180);
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+
+    ctx.font = 'bold 22px "JetBrains Mono", monospace';
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(char, 0, 0);
+
+    ctx.restore();
+  }
+}
+
+function refreshCaptchaChallenge() {
+  orderCaptchaState.currentCode = generateCaptchaCode(4);
+  renderCaptchaCanvas(orderCaptchaState.currentCode);
+  const codeInput = document.getElementById('captchaCodeInput');
+  const errorEl = document.getElementById('captchaChallengeError');
+  if (codeInput) {
+    codeInput.value = '';
+    codeInput.focus();
+  }
+  if (errorEl) {
+    errorEl.style.display = 'none';
+    errorEl.textContent = '';
+  }
+}
+
+function resetOrderCaptcha() {
+  orderCaptchaState.isVerified = false;
+  orderCaptchaState.token = null;
+  orderCaptchaState.tokenExpiry = 0;
+  orderCaptchaState.openedAt = Date.now();
+  orderCaptchaState.isSolving = false;
+
+  const box = document.getElementById('orderCaptchaBox');
+  const check = document.getElementById('orderCaptchaCheck');
+  const customCheck = document.getElementById('captchaCustomCheck');
+  const statusText = document.getElementById('captchaStatusText');
+  const drawer = document.getElementById('captchaChallengeDrawer');
+  const codeInput = document.getElementById('captchaCodeInput');
+  const errorEl = document.getElementById('captchaChallengeError');
+  const submitBtn = document.getElementById('submitTxidBtn');
+
+  if (box) box.classList.remove('captcha-verified');
+  if (check) check.checked = false;
+  if (customCheck) {
+    customCheck.classList.remove('is-verified', 'is-checking');
+  }
+  if (statusText) statusText.textContent = 'Verify you are human';
+  if (drawer) drawer.style.display = 'none';
+  if (codeInput) codeInput.value = '';
+  if (errorEl) errorEl.style.display = 'none';
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.classList.add('btn-locked');
+    submitBtn.innerHTML = '<span id="submitBtnLockIcon">🔒 </span><span id="submitBtnText">Complete Verification to Submit</span>';
+  }
+
+  // Clean honeypot field
+  const hp = document.getElementById('order_hp_token');
+  if (hp) hp.value = '';
+}
+
+function completeCaptchaVerification() {
+  orderCaptchaState.isVerified = true;
+  orderCaptchaState.token = 'iph_sec_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+  orderCaptchaState.tokenExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
+
+  const box = document.getElementById('orderCaptchaBox');
+  const check = document.getElementById('orderCaptchaCheck');
+  const customCheck = document.getElementById('captchaCustomCheck');
+  const statusText = document.getElementById('captchaStatusText');
+  const drawer = document.getElementById('captchaChallengeDrawer');
+  const errorBanner = document.getElementById('txidErrorBanner');
+  const submitBtn = document.getElementById('submitTxidBtn');
+
+  if (box) box.classList.add('captcha-verified');
+  if (check) check.checked = true;
+  if (customCheck) {
+    customCheck.classList.remove('is-checking');
+    customCheck.classList.add('is-verified');
+  }
+  if (statusText) statusText.textContent = 'Human Verified ✓';
+  if (drawer) drawer.style.display = 'none';
+  if (errorBanner) errorBanner.style.display = 'none';
+
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('btn-locked');
+    submitBtn.innerHTML = 'I sent it — check my payment';
+  }
+
+  showToast('Protection Verified', 'Security verification completed successfully.', 'success');
+}
+
+function initOrderCaptcha() {
+  const checkboxWrap = document.getElementById('captchaCheckboxLabel');
+  const customCheck = document.getElementById('captchaCustomCheck');
+  const statusText = document.getElementById('captchaStatusText');
+  const drawer = document.getElementById('captchaChallengeDrawer');
+  const refreshBtn = document.getElementById('captchaRefreshBtn');
+  const verifyBtn = document.getElementById('captchaVerifyBtn');
+  const codeInput = document.getElementById('captchaCodeInput');
+  const errorEl = document.getElementById('captchaChallengeError');
+
+  // Track user interaction entropy
+  const recordEntropy = () => {
+    orderCaptchaState.interactionEntropy++;
+  };
+  window.addEventListener('mousemove', recordEntropy, { passive: true });
+  window.addEventListener('touchstart', recordEntropy, { passive: true });
+  window.addEventListener('keydown', recordEntropy, { passive: true });
+
+  const triggerVerification = (e) => {
+    if (orderCaptchaState.isVerified) return;
+
+    // Check honeypot
+    const hp = document.getElementById('order_hp_token');
+    if (hp && hp.value.trim() !== '') {
+      console.warn('Bot honeypot triggered');
+      return;
+    }
+
+    if (customCheck) customCheck.classList.add('is-checking');
+    if (statusText) statusText.textContent = 'Verifying browser integrity…';
+
+    // Show challenge drawer after realistic verification scan
+    setTimeout(() => {
+      if (customCheck) customCheck.classList.remove('is-checking');
+      if (statusText) statusText.textContent = 'Solve security challenge';
+      if (drawer) {
+        drawer.style.display = 'block';
+        refreshCaptchaChallenge();
+      }
+    }, 400);
+  };
+
+  if (checkboxWrap) {
+    checkboxWrap.addEventListener('click', (e) => {
+      e.preventDefault();
+      triggerVerification(e);
+    });
+  }
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      refreshCaptchaChallenge();
+    });
+  }
+
+  const attemptVerify = () => {
+    if (!codeInput) return;
+    const entered = codeInput.value.trim().toUpperCase();
+    if (!entered) {
+      if (errorEl) {
+        errorEl.textContent = 'Please type the 4 characters shown.';
+        errorEl.style.display = 'block';
+      }
+      return;
+    }
+
+    if (entered === orderCaptchaState.currentCode) {
+      completeCaptchaVerification();
+    } else {
+      if (errorEl) {
+        errorEl.textContent = 'Incorrect code. Please try again with the new code.';
+        errorEl.style.display = 'block';
+      }
+      refreshCaptchaChallenge();
+    }
+  };
+
+  if (verifyBtn) {
+    verifyBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      attemptVerify();
+    });
+  }
+
+  if (codeInput) {
+    codeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        attemptVerify();
+      }
+    });
+  }
+}
+
 // Checkout Modal & Blockchain Verification Flow
 function initCheckout() {
   const checkoutModal = document.getElementById('checkoutModal');
@@ -1890,6 +2167,9 @@ function initCheckout() {
   const copyAddressBtn = document.getElementById('copyAddressBtn');
   const txidForm = document.getElementById('txidForm');
   const viewDashboardBtn = document.getElementById('viewDashboardBtn');
+
+  // Initialize anti-bot CAPTCHA system
+  initOrderCaptcha();
 
   if (closeCheckoutBtn) closeCheckoutBtn.addEventListener('click', closeCheckoutModal);
   if (checkoutModal) {
@@ -1923,14 +2203,47 @@ function initCheckout() {
     });
   }
 
-
-
   if (txidForm) {
     txidForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const txid = document.getElementById('txidInput').value.trim();
       const errorBanner = document.getElementById('txidErrorBanner');
       const submitBtn = document.getElementById('submitTxidBtn');
+
+      // 1. Anti-Bot Honeypot Trap Check
+      const hp = document.getElementById('order_hp_token');
+      if (hp && hp.value.trim() !== '') {
+        console.warn('Bot attack detected by honeypot.');
+        if (errorBanner) {
+          errorBanner.textContent = 'Security violation detected: Automated bot submission blocked.';
+          errorBanner.style.display = 'block';
+        }
+        return;
+      }
+
+      // 2. Anti-Bot CAPTCHA Verification Check
+      if (!orderCaptchaState.isVerified || !orderCaptchaState.token || Date.now() > orderCaptchaState.tokenExpiry) {
+        if (errorBanner) {
+          errorBanner.textContent = 'Security verification required: Please complete the human verification captcha before placing your order.';
+          errorBanner.style.display = 'block';
+        }
+        const drawer = document.getElementById('captchaChallengeDrawer');
+        if (drawer) {
+          drawer.style.display = 'block';
+          refreshCaptchaChallenge();
+        }
+        return;
+      }
+
+      // 3. Automated Speed Check (< 1.0 second from open)
+      if (Date.now() - orderCaptchaState.openedAt < 1000) {
+        if (errorBanner) {
+          errorBanner.textContent = 'Submission too fast. Automated scripts are prohibited.';
+          errorBanner.style.display = 'block';
+        }
+        resetOrderCaptcha();
+        return;
+      }
 
       if (txid.length < 16) {
         errorBanner.textContent = 'Please enter a valid Transaction ID / Hash.';
@@ -2024,6 +2337,9 @@ function openCheckoutModal(provider) {
   document.getElementById('txidInput').value = '';
   document.getElementById('txidErrorBanner').style.display = 'none';
 
+  // Reset and initialize security verification CAPTCHA
+  resetOrderCaptcha();
+
   // Default to LTC
   switchPaymentCoin('LTC');
 
@@ -2033,6 +2349,7 @@ function openCheckoutModal(provider) {
 }
 
 function closeCheckoutModal() {
+  resetOrderCaptcha();
   const checkoutModal = document.getElementById('checkoutModal');
   checkoutModal.classList.remove('active');
   document.body.style.overflow = '';
@@ -2091,6 +2408,19 @@ function showCheckoutStep3(providerId, optionalOrder) {
 
 // Payment Submission & Approval Workflow
 async function handlePaymentSubmission(txid) {
+  // Security Guard: Check if CAPTCHA token exists and is valid
+  if (!orderCaptchaState.isVerified || !orderCaptchaState.token || Date.now() > orderCaptchaState.tokenExpiry) {
+    showToast('Security Alert', 'Automated submission blocked. Please solve the security verification captcha.', 'warn');
+    throw new Error('Automated bot submission blocked: Missing security verification.');
+  }
+
+  // Anti-Bot Honeypot Trap
+  const hp = document.getElementById('order_hp_token');
+  if (hp && hp.value.trim() !== '') {
+    showToast('Security Alert', 'Bot submission rejected.', 'warn');
+    throw new Error('Bot attack detected by honeypot.');
+  }
+
   const provider = state.currentOrder ? state.currentOrder.provider : (state.providers[0] || DEFAULT_PROVIDERS[0]);
   const coinConfig = COINS[selectedCoinKey] || COINS.LTC;
   const orderRef = state.currentOrder ? state.currentOrder.ref : ('ORD-' + Math.floor(100000 + Math.random() * 900000));
@@ -2158,6 +2488,7 @@ async function handlePaymentSubmission(txid) {
 
   updateOrdersBadges();
   showToast('Payment Submitted!', `Order ${orderRef} recorded. Awaiting administrator review.`, 'info');
+  resetOrderCaptcha();
 }
 
 function unlockProviderFromOrder(order) {
